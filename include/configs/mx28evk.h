@@ -75,7 +75,7 @@
  */
 #define CONFIG_NR_DRAM_BANKS		1		/* 1 bank of DRAM */
 #define PHYS_SDRAM_1			0x40000000	/* Base address */
-#define PHYS_SDRAM_1_SIZE		0x40000000	/* Max 1 GB RAM */
+#define PHYS_SDRAM_1_SIZE		0x08000000	/* 128MB RAM */
 #define CONFIG_STACKSIZE		(128 * 1024)	/* 128 KB stack */
 #define CONFIG_SYS_MALLOC_LEN		0x00400000	/* 4 MB for malloc */
 #define CONFIG_SYS_MEMTEST_START	0x40000000	/* Memtest start adr */

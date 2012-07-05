@@ -120,8 +120,8 @@
 	"script=boot.scr\0" \
 	"uimage=uImage\0" \
 	"mmcdev=0\0" \
-	"mmcpart=2\0" \
-	"mmcroot=/dev/mmcblk0p3 rw\0" \
+	"mmcpart=1\0" \
+	"mmcroot=/dev/mmcblk0p2 rw\0" \
 	"mmcrootfstype=ext3 rootwait\0" \
 	"mmcargs=setenv bootargs console=ttymxc0,${baudrate} " \
 		"root=${mmcroot} " \

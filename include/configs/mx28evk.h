@@ -284,12 +284,11 @@
 	"uimage=uImage\0" \
 	"console_fsl=ttyAM0\0" \
 	"console_mainline=ttyAMA0\0" \
-	"console=${console_mainline}\0" \
 	"mmcdev=0\0" \
 	"mmcpart=2\0" \
 	"mmcroot=/dev/mmcblk0p3 rw\0" \
 	"mmcrootfstype=ext3 rootwait\0"	\
-	"mmcargs=setenv bootargs console=${console},${baudrate} " \
+	"mmcargs=setenv bootargs console=${console_mainline},${baudrate} " \
 		"root=${mmcroot} " \
 		"rootfstype=${mmcrootfstype}\0"	\
 	"loadbootscript="  \
@@ -300,7 +299,7 @@
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; "	\
 		"bootm\0" \
-	"netargs=setenv bootargs console=${console},${baudrate} " \
+	"netargs=setenv bootargs console=${console_mainline},${baudrate} " \
 		"root=/dev/nfs " \
 		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
 	"netboot=echo Booting from net ...; " \

@@ -145,8 +145,8 @@
 	"fdt_high=0xffffffff\0"	  \
 	"initrd_high=0xffffffff\0" \
        "mmcdev=0\0" \
-       "mmcpart=2\0" \
-       "mmcroot=/dev/mmcblk0p3 rootwait rw\0" \
+       "mmcpart=1\0" \
+       "mmcroot=/dev/mmcblk0p2 rootwait rw\0" \
        "mmcargs=setenv bootargs console=${console},${baudrate} " \
 	       "root=${mmcroot}\0" \
        "loadbootscript=" \

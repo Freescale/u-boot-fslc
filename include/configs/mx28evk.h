@@ -290,6 +290,8 @@
 	"uimage=uImage\0" \
 	"console_fsl=ttyAM0\0" \
 	"console_mainline=ttyAMA0\0" \
+	"ftd_file=imx28-evk.dtb\0" \
+	"ftd_addr=0x41000000\0" \
 	"mmcdev=0\0" \
 	"mmcpart=2\0" \
 	"mmcroot=/dev/mmcblk0p3 rw\0" \
@@ -304,13 +306,22 @@
 	"loaduimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${uimage}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; "	\
-		"bootm\0" \
+		"if fatload mmc ${mmcdev}:${mmcpart} ${ftd_addr} ${ftd_file}; then " \
+			"bootm ${loadaddr} - ${ftd_addr}; " \
+		"else " \
+			"bootm; " \
+		"fi;\0" \
 	"netargs=setenv bootargs console=${console_mainline},${baudrate} " \
 		"root=/dev/nfs " \
 		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
 	"netboot=echo Booting from net ...; " \
 		"run netargs; "	\
-		"dhcp ${uimage}; bootm\0"
+		"dhcp ${uimage}; " \
+		"if dhcp ${ftd_addr} ${ftd_file}; then " \
+			"bootm ${loadaddr} - ${ftd_addr}; " \
+		"else " \
+			"bootm; " \
+		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
 	"if mmc rescan ${mmcdev}; then " \

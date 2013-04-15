@@ -634,14 +634,6 @@ The following options need to be configured:
 		boot loader that has already initialized the UART.  Define this
 		variable to flush the UART at init time.
 
-		CONFIG_SYS_NS16550_BROKEN_TEMT
-
-		16550 UART set the Transmitter Empty (TEMT) Bit when all output
-		has finished and the transmitter is totally empty. U-Boot waits
-		for this bit to be set to initialize the serial console. On some
-		broken platforms this bit is not set in SPL making U-Boot to
-		hang while waiting for TEMT. Define this option to avoid it.
-
 
 - Console Interface:
 		Depending on board, define exactly one serial port
@@ -1343,6 +1335,29 @@ The following options need to be configured:
 
 			CONFIG_SH_MMCIF_CLK
 			Define the clock frequency for MMCIF
+
+- USB Device Firmware Update (DFU) class support:
+		CONFIG_DFU_FUNCTION
+		This enables the USB portion of the DFU USB class
+
+		CONFIG_CMD_DFU
+		This enables the command "dfu" which is used to have
+		U-Boot create a DFU class device via USB.  This command
+		requires that the "dfu_alt_info" environment variable be
+		set and define the alt settings to expose to the host.
+
+		CONFIG_DFU_MMC
+		This enables support for exposing (e)MMC devices via DFU.
+
+		CONFIG_DFU_NAND
+		This enables support for exposing NAND devices via DFU.
+
+		CONFIG_SYS_DFU_MAX_FILE_SIZE
+		When updating files rather than the raw storage device,
+		we use a static buffer to copy the file into and then write
+		the buffer once we've been given the whole file.  Define
+		this to the maximum filesize (in bytes) for the buffer.
+		Default is 4 MiB if undefined.
 
 - Journaling Flash filesystem support:
 		CONFIG_JFFS2_NAND, CONFIG_JFFS2_NAND_OFF, CONFIG_JFFS2_NAND_SIZE,
@@ -2783,6 +2798,32 @@ FIT uImage format:
 		Adds the MTD partitioning infrastructure from the Linux
 		kernel. Needed for UBI support.
 
+- UBI support
+		CONFIG_CMD_UBI
+
+		Adds commands for interacting with MTD partitions formatted
+		with the UBI flash translation layer
+
+		Requires also defining CONFIG_RBTREE
+
+		CONFIG_UBI_SILENCE_MSG
+
+		Make the verbose messages from UBI stop printing.  This leaves
+		warnings and errors enabled.
+
+- UBIFS support
+		CONFIG_CMD_UBIFS
+
+		Adds commands for interacting with UBI volumes formatted as
+		UBIFS.  UBIFS is read-only in u-boot.
+
+		Requires UBI support as well as CONFIG_LZO
+
+		CONFIG_UBIFS_SILENCE_MSG
+
+		Make the verbose messages from UBIFS stop printing.  This leaves
+		warnings and errors enabled.
+
 - SPL framework
 		CONFIG_SPL
 		Enable building of SPL globally.
@@ -2790,8 +2831,18 @@ FIT uImage format:
 		CONFIG_SPL_LDSCRIPT
 		LDSCRIPT for linking the SPL binary.
 
+		CONFIG_SPL_MAX_FOOTPRINT
+		Maximum size in memory allocated to the SPL, BSS included.
+		When defined, the linker checks that the actual memory
+		used by SPL from _start to __bss_end does not exceed it.
+		CONFIG_SPL_MAX_FOOTPRINT and CONFIG_SPL_BSS_MAX_SIZE
+		must not be both defined at the same time.
+
 		CONFIG_SPL_MAX_SIZE
-		Maximum binary size (text, data and rodata) of the SPL binary.
+		Maximum size of the SPL image (text, data, rodata, and
+		linker lists sections), BSS excluded.
+		When defined, the linker checks that the actual size does
+		not exceed it.
 
 		CONFIG_SPL_TEXT_BASE
 		TEXT_BASE for linking the SPL binary.
@@ -2804,7 +2855,11 @@ FIT uImage format:
 		Link address for the BSS within the SPL binary.
 
 		CONFIG_SPL_BSS_MAX_SIZE
-		Maximum binary size of the BSS section of the SPL binary.
+		Maximum size in memory allocated to the SPL BSS.
+		When defined, the linker checks that the actual memory used
+		by SPL from __bss_start to __bss_end does not exceed it.
+		CONFIG_SPL_MAX_FOOTPRINT and CONFIG_SPL_BSS_MAX_SIZE
+		must not be both defined at the same time.
 
 		CONFIG_SPL_STACK
 		Adress of the start of the stack SPL will use
@@ -2923,8 +2978,11 @@ FIT uImage format:
 		Support for lib/libgeneric.o in SPL binary
 
 		CONFIG_SPL_PAD_TO
-		Linker address to which the SPL should be padded before
-		appending the SPL payload.
+		Image offset to which the SPL should be padded before appending
+		the SPL payload. By default, this is defined as
+		CONFIG_SPL_MAX_SIZE, or 0 if CONFIG_SPL_MAX_SIZE is undefined.
+		CONFIG_SPL_PAD_TO must be either 0, meaning to append the SPL
+		payload without any padding, or >= CONFIG_SPL_MAX_SIZE.
 
 		CONFIG_SPL_TARGET
 		Final target image containing SPL and payload.  Some SPLs
@@ -3499,6 +3557,33 @@ but it can not erase, write this NOR flash by SRIO or PCIE interface.
 	environment. If redundant environment is used, it will be copied to
 	CONFIG_NAND_ENV_DST + CONFIG_ENV_SIZE.
 
+- CONFIG_ENV_IS_IN_UBI:
+
+	Define this if you have an UBI volume that you want to use for the
+	environment.  This has the benefit of wear-leveling the environment
+	accesses, which is important on NAND.
+
+	- CONFIG_ENV_UBI_PART:
+
+	  Define this to a string that is the mtd partition containing the UBI.
+
+	- CONFIG_ENV_UBI_VOLUME:
+
+	  Define this to the name of the volume that you want to store the
+	  environment in.
+
+	- CONFIG_ENV_UBI_VOLUME_REDUND:
+
+	  Define this to the name of another volume to store a second copy of
+	  the environment in.  This will enable redundant environments in UBI.
+	  It is assumed that both volumes are in the same MTD partition.
+
+	- CONFIG_UBI_SILENCE_MSG
+	- CONFIG_UBIFS_SILENCE_MSG
+
+	  You will probably want to define these to avoid a really noisy system
+	  when storing the env in UBI.
+
 - CONFIG_SYS_SPI_INIT_OFFSET
 
 	Defines offset to the initial SPI buffer area in DPRAM. The
@@ -3770,9 +3855,13 @@ Low Level (hardware related) configuration options:
 - CONFIG_SYS_SRIOn_MEM_SIZE:
 		Size of SRIO port 'n' memory region
 
-- CONFIG_SYS_NDFC_16
-		Defined to tell the NDFC that the NAND chip is using a
-		16 bit bus.
+- CONFIG_SYS_NAND_BUSWIDTH_16BIT
+		Defined to tell the NAND controller that the NAND chip is using
+		a 16 bit bus.
+		Not all NAND drivers use this symbol.
+		Example of drivers that use it:
+		- drivers/mtd/nand/ndfc.c
+		- drivers/mtd/nand/mxc_nand.c
 
 - CONFIG_SYS_NDFC_EBC0_CFG
 		Sets the EBC0_CFG register for the NDFC. If not defined

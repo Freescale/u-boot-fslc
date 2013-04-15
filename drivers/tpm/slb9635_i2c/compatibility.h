@@ -1,13 +1,10 @@
 /*
- * (C) Copyright 2002
- * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
- * Marius Groeger <mgroeger@sysgo.de>
+ * Copyright (C) 2011 Infineon Technologies
  *
- * (C) Copyright 2002
- * David Mueller, ELSOFT AG, <d.mueller@elsoft.ch>
+ * Authors:
+ * Peter Huewe <huewe.external@infineon.com>
  *
- * (C) Copyright 2008
- * Guennadi Liakhovetki, DENX Software Engineering, <lg@denx.de>
+ * Version: 2.1.1
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -28,10 +25,27 @@
  * MA 02111-1307 USA
  */
 
+#ifndef _COMPATIBILITY_H_
+#define _COMPATIBILITY_H_
+
+/* all includes from U-Boot */
+#include <linux/types.h>
+#include <linux/unaligned/be_byteshift.h>
+#include <asm-generic/errno.h>
+#include <compiler.h>
 #include <common.h>
 
-void board_init_f(unsigned long bootflag)
-{
-	relocate_code(CONFIG_SYS_TEXT_BASE - TOTAL_MALLOC_LEN, NULL,
-			CONFIG_SYS_TEXT_BASE);
-}
+/* extended error numbers from linux (see errno.h) */
+#define	ECANCELED	125	/* Operation Canceled */
+
+#define msleep(t) udelay((t)*1000)
+
+/* Timer frequency. Corresponds to msec timer resolution*/
+#define HZ             1000
+
+#define dev_dbg(dev, format, arg...) debug(format, ##arg)
+#define dev_err(dev, format, arg...) printf(format, ##arg)
+#define dev_info(dev, format, arg...) debug(format, ##arg)
+#define dbg_printf debug
+
+#endif

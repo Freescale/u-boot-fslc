@@ -784,6 +784,8 @@ retry_scr:
 			break;
 		case 2:
 			mmc->version = SD_VERSION_2;
+			if ((mmc->scr[0] >> 15) & 0x1)
+				mmc->version = SD_VERSION_3;
 			break;
 		default:
 			mmc->version = SD_VERSION_1_0;
@@ -1052,6 +1054,24 @@ static int mmc_startup(struct mmc *mmc)
 			capacity *= 512;
 			if ((capacity >> 20) > 2 * 1024)
 				mmc->capacity = capacity;
+		}
+
+		switch (ext_csd[EXT_CSD_REV]) {
+		case 1:
+			mmc->version = MMC_VERSION_4_1;
+			break;
+		case 2:
+			mmc->version = MMC_VERSION_4_2;
+			break;
+		case 3:
+			mmc->version = MMC_VERSION_4_3;
+			break;
+		case 5:
+			mmc->version = MMC_VERSION_4_41;
+			break;
+		case 6:
+			mmc->version = MMC_VERSION_4_5;
+			break;
 		}
 
 		/*

@@ -1,7 +1,5 @@
 /*
- * Lowlevel setup for SMDK5250 board based on S5PC520
- *
- * Copyright (C) 2012 Samsung Electronics
+ * Copyright 2013 Freescale Semiconductor, Inc.
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -22,27 +20,15 @@
  * MA 02111-1307 USA
  */
 
-#include <asm/arch/tzpc.h>
-#include"setup.h"
+#include <common.h>
+#include <asm/fsl_law.h>
+#include <asm/mmu.h>
 
-/* Setting TZPC[TrustZone Protection Controller] */
-void tzpc_init(void)
-{
-	struct exynos_tzpc *tzpc;
-	unsigned int addr;
+struct law_entry law_table[] = {
+	SET_LAW(CONFIG_SYS_NAND_BASE_PHYS, LAW_SIZE_1M, LAW_TRGT_IF_LBC),
+	SET_LAW(CONFIG_SYS_QMAN_MEM_PHYS, LAW_SIZE_4M,
+		LAW_TRGT_IF_DPAA_SWP_SRAM),
+	SET_LAW(CONFIG_SYS_FLASH_BASE_PHYS, LAW_SIZE_256M, LAW_TRGT_IF_LBC),
+};
 
-	for (addr = TZPC0_BASE; addr <= TZPC9_BASE; addr += TZPC_BASE_OFFSET) {
-		tzpc = (struct exynos_tzpc *)addr;
-
-		if (addr == TZPC0_BASE)
-			writel(R0SIZE, &tzpc->r0size);
-
-		writel(DECPROTXSET, &tzpc->decprot0set);
-		writel(DECPROTXSET, &tzpc->decprot1set);
-
-		if (addr != TZPC9_BASE) {
-			writel(DECPROTXSET, &tzpc->decprot2set);
-			writel(DECPROTXSET, &tzpc->decprot3set);
-		}
-	}
-}
+int num_law_entries = ARRAY_SIZE(law_table);

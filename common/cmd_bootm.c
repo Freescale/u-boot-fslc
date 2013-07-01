@@ -104,9 +104,18 @@ static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
  *  - verified image architecture (PPC) and type (KERNEL or MULTI),
  *  - loaded (first part of) image to header load address,
  *  - disabled interrupts.
+ *
+ * @flag: Flags indicating what to do (BOOTM_STATE_...)
+ * @argc: Number of arguments. Note that the arguments are shifted down
+ *	 so that 0 is the first argument not processed by U-Boot, and
+ *	 argc is adjusted accordingly. This avoids confusion as to how
+ *	 many arguments are available for the OS.
+ * @images: Pointers to os/initrd/fdt
+ * @return 1 on error. On success the OS boots so this function does
+ * not return.
  */
 typedef int boot_os_fn(int flag, int argc, char * const argv[],
-			bootm_headers_t *images); /* pointers to os/initrd/fdt */
+			bootm_headers_t *images);
 
 #ifdef CONFIG_BOOTM_LINUX
 extern boot_os_fn do_bootm_linux;
@@ -199,15 +208,21 @@ static inline void boot_start_lmb(bootm_headers_t *images) { }
 
 static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-	const void *os_hdr;
-	int ret;
-
 	memset((void *)&images, 0, sizeof(images));
 	images.verify = getenv_yesno("verify");
 
 	boot_start_lmb(&images);
 
 	bootstage_mark_name(BOOTSTAGE_ID_BOOTM_START, "bootm_start");
+	images.state = BOOTM_STATE_START;
+
+	return 0;
+}
+
+static int bootm_find_os(cmd_tbl_t *cmdtp, int flag, int argc,
+			 char * const argv[])
+{
+	const void *os_hdr;
 
 	/* get kernel image header, start address and length */
 	os_hdr = boot_get_kernel(cmdtp, flag, argc, argv,
@@ -270,6 +285,8 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 		images.ep = image_get_ep(&images.legacy_hdr_os_copy);
 #if defined(CONFIG_FIT)
 	} else if (images.fit_uname_os) {
+		int ret;
+
 		ret = fit_image_get_entry(images.fit_hdr_os,
 					  images.fit_noffset_os, &images.ep);
 		if (ret) {
@@ -286,6 +303,16 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 		images.os.load = images.os.image_start;
 		images.ep += images.os.load;
 	}
+
+	images.os.start = (ulong)os_hdr;
+
+	return 0;
+}
+
+static int bootm_find_other(cmd_tbl_t *cmdtp, int flag, int argc,
+			    char * const argv[])
+{
+	int ret;
 
 	if (((images.os.type == IH_TYPE_KERNEL) ||
 	     (images.os.type == IH_TYPE_KERNEL_NOLOAD) ||
@@ -312,17 +339,16 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 #endif
 	}
 
-	images.os.start = (ulong)os_hdr;
-	images.state = BOOTM_STATE_START;
-
 	return 0;
 }
 
 #define BOOTM_ERR_RESET		-1
 #define BOOTM_ERR_OVERLAP	-2
 #define BOOTM_ERR_UNIMPLEMENTED	-3
-static int bootm_load_os(image_info_t os, ulong *load_end, int boot_progress)
+static int bootm_load_os(bootm_headers_t *images, unsigned long *load_end,
+		int boot_progress)
 {
+	image_info_t os = images->os;
 	uint8_t comp = os.comp;
 	ulong load = os.load;
 	ulong blob_start = os.start;
@@ -440,13 +466,23 @@ static int bootm_load_os(image_info_t os, ulong *load_end, int boot_progress)
 		debug("images.os.load = 0x%lx, load_end = 0x%lx\n", load,
 			*load_end);
 
-		return BOOTM_ERR_OVERLAP;
+		/* Check what type of image this is. */
+		if (images->legacy_hdr_valid) {
+			if (image_get_type(&images->legacy_hdr_os_copy)
+					== IH_TYPE_MULTI)
+				puts("WARNING: legacy format multi component image overwritten\n");
+			return BOOTM_ERR_OVERLAP;
+		} else {
+			puts("ERROR: new format image overwritten - must RESET the board to recover\n");
+			bootstage_error(BOOTSTAGE_ID_OVERWRITTEN);
+			return BOOTM_ERR_RESET;
+		}
 	}
 
 	return 0;
 }
 
-static int bootm_start_standalone(ulong iflag, int argc, char * const argv[])
+static int bootm_start_standalone(int argc, char * const argv[])
 {
 	char  *s;
 	int   (*appl)(int, char * const []);
@@ -457,7 +493,7 @@ static int bootm_start_standalone(ulong iflag, int argc, char * const argv[])
 		return 0;
 	}
 	appl = (int (*)(int, char * const []))(ulong)ntohl(images.ep);
-	(*appl)(argc-1, &argv[1]);
+	(*appl)(argc, argv);
 	return 0;
 }
 
@@ -475,8 +511,199 @@ static cmd_tbl_t cmd_bootm_sub[] = {
 	U_BOOT_CMD_MKENT(cmdline, 0, 1, (void *)BOOTM_STATE_OS_CMDLINE, "", ""),
 	U_BOOT_CMD_MKENT(bdt, 0, 1, (void *)BOOTM_STATE_OS_BD_T, "", ""),
 	U_BOOT_CMD_MKENT(prep, 0, 1, (void *)BOOTM_STATE_OS_PREP, "", ""),
+	U_BOOT_CMD_MKENT(fake, 0, 1, (void *)BOOTM_STATE_OS_FAKE_GO, "", ""),
 	U_BOOT_CMD_MKENT(go, 0, 1, (void *)BOOTM_STATE_OS_GO, "", ""),
 };
+
+static int boot_selected_os(int argc, char * const argv[], int state,
+		bootm_headers_t *images, boot_os_fn *boot_fn)
+{
+	if (images->os.type == IH_TYPE_STANDALONE) {
+		/* This may return when 'autostart' is 'no' */
+		bootm_start_standalone(argc, argv);
+		return 0;
+	}
+#ifdef CONFIG_SILENT_CONSOLE
+	if (images->os.os == IH_OS_LINUX)
+		fixup_silent_linux();
+#endif
+	arch_preboot_os();
+	boot_fn(state, argc, argv, images);
+	if (state == BOOTM_STATE_OS_FAKE_GO) /* We expect to return */
+		return 0;
+	bootstage_error(BOOTSTAGE_ID_BOOT_OS_RETURNED);
+#ifdef DEBUG
+	puts("\n## Control returned to monitor - resetting...\n");
+#endif
+	return BOOTM_ERR_RESET;
+}
+
+/**
+ * Execute selected states of the bootm command.
+ *
+ * Note the arguments to this state must be the first argument, Any 'bootm'
+ * or sub-command arguments must have already been taken.
+ *
+ * Note that if states contains more than one flag it MUST contain
+ * BOOTM_STATE_START, since this handles and consumes the command line args.
+ *
+ * Also note that aside from boot_os_fn functions and bootm_load_os no other
+ * functions we store the return value of in 'ret' may use a negative return
+ * value, without special handling.
+ *
+ * @param cmdtp		Pointer to bootm command table entry
+ * @param flag		Command flags (CMD_FLAG_...)
+ * @param argc		Number of subcommand arguments (0 = no arguments)
+ * @param argv		Arguments
+ * @param states	Mask containing states to run (BOOTM_STATE_...)
+ * @param images	Image header information
+ * @param boot_progress 1 to show boot progress, 0 to not do this
+ * @return 0 if ok, something else on error. Some errors will cause this
+ *	function to perform a reboot! If states contains BOOTM_STATE_OS_GO
+ *	then the intent is to boot an OS, so this function will not return
+ *	unless the image type is standalone.
+ */
+static int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc,
+		char * const argv[], int states, bootm_headers_t *images,
+		int boot_progress)
+{
+	boot_os_fn *boot_fn;
+	ulong iflag = 0;
+	int ret = 0;
+
+	images->state |= states;
+
+	/*
+	 * Work through the states and see how far we get. We stop on
+	 * any error.
+	 */
+	if (states & BOOTM_STATE_START)
+		ret = bootm_start(cmdtp, flag, argc, argv);
+
+	if (!ret && (states & BOOTM_STATE_FINDOS))
+		ret = bootm_find_os(cmdtp, flag, argc, argv);
+
+	if (!ret && (states & BOOTM_STATE_FINDOTHER)) {
+		ret = bootm_find_other(cmdtp, flag, argc, argv);
+		argc = 0;	/* consume the args */
+	}
+
+	/*
+	 * We have reached the point of no return: we are going to
+	 * overwrite all exception vector code, so we cannot easily
+	 * recover from any failures any more...
+	 */
+	iflag = disable_interrupts();
+#ifdef CONFIG_NETCONSOLE
+	/* Stop the ethernet stack if NetConsole could have left it up */
+	eth_halt();
+#endif
+
+#if defined(CONFIG_CMD_USB)
+	/*
+	 * turn off USB to prevent the host controller from writing to the
+	 * SDRAM while Linux is booting. This could happen (at least for OHCI
+	 * controller), because the HCCA (Host Controller Communication Area)
+	 * lies within the SDRAM and the host controller writes continously to
+	 * this area (as busmaster!). The HccaFrameNumber is for example
+	 * updated every 1 ms within the HCCA structure in SDRAM! For more
+	 * details see the OpenHCI specification.
+	 */
+	usb_stop();
+#endif
+
+	/* Load the OS */
+	if (!ret && (states & BOOTM_STATE_LOADOS)) {
+		ulong load_end;
+
+		ret = bootm_load_os(images, &load_end, 0);
+		if (ret && ret != BOOTM_ERR_OVERLAP)
+			goto err;
+
+		if (ret == 0)
+			lmb_reserve(&images->lmb, images->os.load,
+				    (load_end - images->os.load));
+		else if (ret == BOOTM_ERR_OVERLAP)
+			ret = 0;
+	}
+
+	/* Relocate the ramdisk */
+#ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
+	if (!ret && (states & BOOTM_STATE_RAMDISK)) {
+		ulong rd_len = images->rd_end - images->rd_start;
+
+		ret = boot_ramdisk_high(&images->lmb, images->rd_start,
+			rd_len, &images->initrd_start, &images->initrd_end);
+		if (!ret) {
+			setenv_hex("initrd_start", images->initrd_start);
+			setenv_hex("initrd_end", images->initrd_end);
+		}
+	}
+#endif
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_LMB)
+	if (!ret && (states & BOOTM_STATE_FDT)) {
+		boot_fdt_add_mem_rsv_regions(&images->lmb, images->ft_addr);
+		ret = boot_relocate_fdt(&images->lmb, &images->ft_addr,
+					&images->ft_len);
+	}
+#endif
+
+	/* From now on, we need the OS boot function */
+	if (ret)
+		return ret;
+	boot_fn = boot_os[images->os.os];
+	if (boot_fn == NULL) {
+		if (iflag)
+			enable_interrupts();
+		printf("ERROR: booting os '%s' (%d) is not supported\n",
+		       genimg_get_os_name(images->os.os), images->os.os);
+		bootstage_error(BOOTSTAGE_ID_CHECK_BOOT_OS);
+		return 1;
+	}
+
+	/* Call various other states that are not generally used */
+	if (!ret && (states & BOOTM_STATE_OS_CMDLINE))
+		ret = boot_fn(BOOTM_STATE_OS_CMDLINE, argc, argv, images);
+	if (!ret && (states & BOOTM_STATE_OS_BD_T))
+		ret = boot_fn(BOOTM_STATE_OS_BD_T, argc, argv, images);
+	if (!ret && (states & BOOTM_STATE_OS_PREP))
+		ret = boot_fn(BOOTM_STATE_OS_PREP, argc, argv, images);
+
+#ifdef CONFIG_TRACE
+	/* Pretend to run the OS, then run a user command */
+	if (!ret && (states & BOOTM_STATE_OS_FAKE_GO)) {
+		char *cmd_list = getenv("fakegocmd");
+
+		ret = boot_selected_os(argc, argv, BOOTM_STATE_OS_FAKE_GO,
+				images, boot_fn);
+		if (!ret && cmd_list)
+			ret = run_command_list(cmd_list, -1, flag);
+	}
+#endif
+	/* Now run the OS! We hope this doesn't return */
+	if (!ret && (states & BOOTM_STATE_OS_GO)) {
+		ret = boot_selected_os(argc, argv, BOOTM_STATE_OS_GO,
+				images, boot_fn);
+		if (ret)
+			goto err;
+	}
+
+	return ret;
+
+	/* Deal with any fallout */
+err:
+	if (iflag)
+		enable_interrupts();
+
+	if (ret == BOOTM_ERR_UNIMPLEMENTED)
+		bootstage_error(BOOTSTAGE_ID_DECOMP_UNIMPL);
+	else if (ret == BOOTM_ERR_RESET)
+		do_reset(cmdtp, flag, argc, argv);
+	else
+		puts("subcommand not supported\n");
+
+	return ret;
+}
 
 static int do_bootm_subcommand(cmd_tbl_t *cmdtp, int flag, int argc,
 			char * const argv[])
@@ -484,99 +711,25 @@ static int do_bootm_subcommand(cmd_tbl_t *cmdtp, int flag, int argc,
 	int ret = 0;
 	long state;
 	cmd_tbl_t *c;
-	boot_os_fn *boot_fn;
 
-	c = find_cmd_tbl(argv[1], &cmd_bootm_sub[0], ARRAY_SIZE(cmd_bootm_sub));
+	c = find_cmd_tbl(argv[0], &cmd_bootm_sub[0], ARRAY_SIZE(cmd_bootm_sub));
+	argc--; argv++;
 
 	if (c) {
 		state = (long)c->cmd;
-
-		/* treat start special since it resets the state machine */
-		if (state == BOOTM_STATE_START) {
-			argc--;
-			argv++;
-			return bootm_start(cmdtp, flag, argc, argv);
-		}
+		if (state == BOOTM_STATE_START)
+			state |= BOOTM_STATE_FINDOS | BOOTM_STATE_FINDOTHER;
 	} else {
 		/* Unrecognized command */
 		return CMD_RET_USAGE;
 	}
 
-	if (images.state < BOOTM_STATE_START ||
-	    images.state >= state) {
+	if (state != BOOTM_STATE_START && images.state >= state) {
 		printf("Trying to execute a command out of order\n");
 		return CMD_RET_USAGE;
 	}
 
-	images.state |= state;
-	boot_fn = boot_os[images.os.os];
-
-	switch (state) {
-		ulong load_end;
-		case BOOTM_STATE_START:
-			/* should never occur */
-			break;
-		case BOOTM_STATE_LOADOS:
-			ret = bootm_load_os(images.os, &load_end, 0);
-			if (ret)
-				return ret;
-
-			lmb_reserve(&images.lmb, images.os.load,
-					(load_end - images.os.load));
-			break;
-#ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
-		case BOOTM_STATE_RAMDISK:
-		{
-			ulong rd_len = images.rd_end - images.rd_start;
-
-			ret = boot_ramdisk_high(&images.lmb, images.rd_start,
-				rd_len, &images.initrd_start, &images.initrd_end);
-			if (ret)
-				return ret;
-
-			setenv_hex("initrd_start", images.initrd_start);
-			setenv_hex("initrd_end", images.initrd_end);
-		}
-			break;
-#endif
-#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_LMB)
-		case BOOTM_STATE_FDT:
-		{
-			boot_fdt_add_mem_rsv_regions(&images.lmb,
-						     images.ft_addr);
-			ret = boot_relocate_fdt(&images.lmb,
-				&images.ft_addr, &images.ft_len);
-			break;
-		}
-#endif
-		case BOOTM_STATE_OS_CMDLINE:
-			ret = boot_fn(BOOTM_STATE_OS_CMDLINE, argc, argv, &images);
-			if (ret)
-				printf("cmdline subcommand not supported\n");
-			break;
-		case BOOTM_STATE_OS_BD_T:
-			ret = boot_fn(BOOTM_STATE_OS_BD_T, argc, argv, &images);
-			if (ret)
-				printf("bdt subcommand not supported\n");
-			break;
-		case BOOTM_STATE_OS_PREP:
-			ret = boot_fn(BOOTM_STATE_OS_PREP, argc, argv, &images);
-			if (ret)
-				printf("prep subcommand not supported\n");
-			break;
-		case BOOTM_STATE_OS_GO:
-			disable_interrupts();
-#ifdef CONFIG_NETCONSOLE
-			/*
-			 * Stop the ethernet stack if NetConsole could have
-			 * left it up
-			 */
-			eth_halt();
-#endif
-			arch_preboot_os();
-			boot_fn(BOOTM_STATE_OS_GO, argc, argv, &images);
-			break;
-	}
+	ret = do_bootm_states(cmdtp, flag, argc, argv, state, &images, 0);
 
 	return ret;
 }
@@ -587,10 +740,6 @@ static int do_bootm_subcommand(cmd_tbl_t *cmdtp, int flag, int argc,
 
 int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-	ulong		iflag;
-	ulong		load_end = 0;
-	int		ret;
-	boot_os_fn	*boot_fn;
 #ifdef CONFIG_NEEDS_MANUAL_RELOC
 	static int relocated = 0;
 
@@ -611,11 +760,12 @@ int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 #endif
 
 	/* determine if we have a sub command */
-	if (argc > 1) {
+	argc--; argv++;
+	if (argc > 0) {
 		char *endp;
 
-		simple_strtoul(argv[1], &endp, 16);
-		/* endp pointing to NULL means that argv[1] was just a
+		simple_strtoul(argv[0], &endp, 16);
+		/* endp pointing to NULL means that argv[0] was just a
 		 * valid number, pass it along to the normal bootm processing
 		 *
 		 * If endp is ':' or '#' assume a FIT identifier so pass
@@ -627,101 +777,10 @@ int do_bootm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			return do_bootm_subcommand(cmdtp, flag, argc, argv);
 	}
 
-	if (bootm_start(cmdtp, flag, argc, argv))
-		return 1;
-
-	/*
-	 * We have reached the point of no return: we are going to
-	 * overwrite all exception vector code, so we cannot easily
-	 * recover from any failures any more...
-	 */
-	iflag = disable_interrupts();
-
-#ifdef CONFIG_NETCONSOLE
-	/* Stop the ethernet stack if NetConsole could have left it up */
-	eth_halt();
-#endif
-
-#if defined(CONFIG_CMD_USB)
-	/*
-	 * turn off USB to prevent the host controller from writing to the
-	 * SDRAM while Linux is booting. This could happen (at least for OHCI
-	 * controller), because the HCCA (Host Controller Communication Area)
-	 * lies within the SDRAM and the host controller writes continously to
-	 * this area (as busmaster!). The HccaFrameNumber is for example
-	 * updated every 1 ms within the HCCA structure in SDRAM! For more
-	 * details see the OpenHCI specification.
-	 */
-	usb_stop();
-#endif
-
-	ret = bootm_load_os(images.os, &load_end, 1);
-
-	if (ret < 0) {
-		if (ret == BOOTM_ERR_RESET)
-			do_reset(cmdtp, flag, argc, argv);
-		if (ret == BOOTM_ERR_OVERLAP) {
-			if (images.legacy_hdr_valid) {
-				image_header_t *hdr;
-				hdr = &images.legacy_hdr_os_copy;
-				if (image_get_type(hdr) == IH_TYPE_MULTI)
-					puts("WARNING: legacy format multi "
-						"component image "
-						"overwritten\n");
-			} else {
-				puts("ERROR: new format image overwritten - "
-					"must RESET the board to recover\n");
-				bootstage_error(BOOTSTAGE_ID_OVERWRITTEN);
-				do_reset(cmdtp, flag, argc, argv);
-			}
-		}
-		if (ret == BOOTM_ERR_UNIMPLEMENTED) {
-			if (iflag)
-				enable_interrupts();
-			bootstage_error(BOOTSTAGE_ID_DECOMP_UNIMPL);
-			return 1;
-		}
-	}
-
-	lmb_reserve(&images.lmb, images.os.load, (load_end - images.os.load));
-
-	if (images.os.type == IH_TYPE_STANDALONE) {
-		if (iflag)
-			enable_interrupts();
-		/* This may return when 'autostart' is 'no' */
-		bootm_start_standalone(iflag, argc, argv);
-		return 0;
-	}
-
-	bootstage_mark(BOOTSTAGE_ID_CHECK_BOOT_OS);
-
-#if defined(CONFIG_SILENT_CONSOLE) && !defined(CONFIG_SILENT_U_BOOT_ONLY)
-	if (images.os.os == IH_OS_LINUX)
-		fixup_silent_linux();
-#endif
-
-	boot_fn = boot_os[images.os.os];
-
-	if (boot_fn == NULL) {
-		if (iflag)
-			enable_interrupts();
-		printf("ERROR: booting os '%s' (%d) is not supported\n",
-			genimg_get_os_name(images.os.os), images.os.os);
-		bootstage_error(BOOTSTAGE_ID_CHECK_BOOT_OS);
-		return 1;
-	}
-
-	arch_preboot_os();
-
-	boot_fn(0, argc, argv, &images);
-
-	bootstage_error(BOOTSTAGE_ID_BOOT_OS_RETURNED);
-#ifdef DEBUG
-	puts("\n## Control returned to monitor - resetting...\n");
-#endif
-	do_reset(cmdtp, flag, argc, argv);
-
-	return 1;
+	return do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START |
+		BOOTM_STATE_FINDOS | BOOTM_STATE_FINDOTHER |
+		BOOTM_STATE_LOADOS | BOOTM_STATE_OS_PREP |
+		BOOTM_STATE_OS_FAKE_GO | BOOTM_STATE_OS_GO, &images, 1);
 }
 
 int bootm_maybe_autostart(cmd_tbl_t *cmdtp, const char *cmd)
@@ -816,22 +875,22 @@ static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
 #endif
 
 	/* find out kernel image address */
-	if (argc < 2) {
+	if (argc < 1) {
 		img_addr = load_addr;
 		debug("*  kernel: default image load address = 0x%08lx\n",
 				load_addr);
 #if defined(CONFIG_FIT)
-	} else if (fit_parse_conf(argv[1], load_addr, &img_addr,
+	} else if (fit_parse_conf(argv[0], load_addr, &img_addr,
 							&fit_uname_config)) {
 		debug("*  kernel: config '%s' from image at 0x%08lx\n",
 				fit_uname_config, img_addr);
-	} else if (fit_parse_subimage(argv[1], load_addr, &img_addr,
+	} else if (fit_parse_subimage(argv[0], load_addr, &img_addr,
 							&fit_uname_kernel)) {
 		debug("*  kernel: subimage '%s' from image at 0x%08lx\n",
 				fit_uname_kernel, img_addr);
 #endif
 	} else {
-		img_addr = simple_strtoul(argv[1], NULL, 16);
+		img_addr = simple_strtoul(argv[0], NULL, 16);
 		debug("*  kernel: cmdline image address = 0x%08lx\n", img_addr);
 	}
 
@@ -1346,6 +1405,19 @@ static void fixup_silent_linux(void)
 }
 #endif /* CONFIG_SILENT_CONSOLE */
 
+#if defined(CONFIG_BOOTM_NETBSD) || defined(CONFIG_BOOTM_PLAN9)
+static void copy_args(char *dest, int argc, char * const argv[], char delim)
+{
+	int i;
+
+	for (i = 0; i < argc; i++) {
+		if (i > 0)
+			*dest++ = delim;
+		strcpy(dest, argv[i]);
+		dest += strlen(argv[i]);
+	}
+}
+#endif
 
 /*******************************************************************/
 /* OS booting routines */
@@ -1401,20 +1473,14 @@ static int do_bootm_netbsd(int flag, int argc, char * const argv[],
 	consdev = "scc3";
 #endif
 
-	if (argc > 2) {
+	if (argc > 0) {
 		ulong len;
 		int   i;
 
-		for (i = 2, len = 0; i < argc; i += 1)
+		for (i = 0, len = 0; i < argc; i += 1)
 			len += strlen(argv[i]) + 1;
 		cmdline = malloc(len);
-
-		for (i = 2, len = 0; i < argc; i += 1) {
-			if (i > 2)
-				cmdline[len++] = ' ';
-			strcpy(&cmdline[len], argv[i]);
-			len += strlen(argv[i]);
-		}
+		copy_args(cmdline, argc, argv, ' ');
 	} else if ((cmdline = getenv("bootargs")) == NULL) {
 		cmdline = "";
 	}
@@ -1533,6 +1599,7 @@ static int do_bootm_plan9(int flag, int argc, char * const argv[],
 			   bootm_headers_t *images)
 {
 	void (*entry_point)(void);
+	char *s;
 
 	if ((flag != 0) && (flag != BOOTM_STATE_OS_GO))
 		return 1;
@@ -1543,6 +1610,20 @@ static int do_bootm_plan9(int flag, int argc, char * const argv[],
 		return 1;
 	}
 #endif
+
+	/* See README.plan9 */
+	s = getenv("confaddr");
+	if (s != NULL) {
+		char *confaddr = (char *)simple_strtoul(s, NULL, 16);
+
+		if (argc > 0) {
+			copy_args(confaddr, argc, argv, '\n');
+		} else {
+			s = getenv("bootargs");
+			if (s != NULL)
+				strcpy(confaddr, s);
+		}
+	}
 
 	entry_point = (void (*)(void))images->ep;
 
@@ -1663,9 +1744,8 @@ static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 	int ret;
 	void *zi_start, *zi_end;
 
-	memset(images, 0, sizeof(bootm_headers_t));
-
-	boot_start_lmb(images);
+	ret = do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START,
+			      images, 1);
 
 	/* Setup Linux kernel zImage entry point */
 	if (argc < 2) {
@@ -1684,73 +1764,25 @@ static int bootz_start(cmd_tbl_t *cmdtp, int flag, int argc,
 
 	lmb_reserve(&images->lmb, images->ep, zi_end - zi_start);
 
-	/* Find ramdisk */
-	ret = boot_get_ramdisk(argc, argv, images, IH_INITRD_ARCH,
-			&images->rd_start, &images->rd_end);
-	if (ret) {
-		puts("Ramdisk image is corrupt or invalid\n");
-		return 1;
-	}
+	ret = do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_FINDOTHER,
+			      images, 1);
 
-#if defined(CONFIG_OF_LIBFDT)
-	/* find flattened device tree */
-	ret = boot_get_fdt(flag, argc, argv, IH_ARCH_DEFAULT, images,
-			   &images->ft_addr, &images->ft_len);
-	if (ret) {
-		puts("Could not find a valid device tree\n");
-		return 1;
-	}
-
-	set_working_fdt_addr(images->ft_addr);
-#endif
-
-	return 0;
+	return ret;
 }
 
-static int do_bootz(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+int do_bootz(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	bootm_headers_t	images;
+	int ret;
 
 	if (bootz_start(cmdtp, flag, argc, argv, &images))
 		return 1;
 
-	/*
-	 * We have reached the point of no return: we are going to
-	 * overwrite all exception vector code, so we cannot easily
-	 * recover from any failures any more...
-	 */
-	disable_interrupts();
+	ret = do_bootm_states(cmdtp, flag, argc, argv,
+			      BOOTM_STATE_OS_FAKE_GO | BOOTM_STATE_OS_GO,
+			      &images, 1);
 
-#ifdef CONFIG_NETCONSOLE
-	/* Stop the ethernet stack if NetConsole could have left it up */
-	eth_halt();
-#endif
-
-#if defined(CONFIG_CMD_USB)
-	/*
-	 * turn off USB to prevent the host controller from writing to the
-	 * SDRAM while Linux is booting. This could happen (at least for OHCI
-	 * controller), because the HCCA (Host Controller Communication Area)
-	 * lies within the SDRAM and the host controller writes continously to
-	 * this area (as busmaster!). The HccaFrameNumber is for example
-	 * updated every 1 ms within the HCCA structure in SDRAM! For more
-	 * details see the OpenHCI specification.
-	 */
-	usb_stop();
-#endif
-
-#if defined(CONFIG_SILENT_CONSOLE) && !defined(CONFIG_SILENT_U_BOOT_ONLY)
-	fixup_silent_linux();
-#endif
-	arch_preboot_os();
-
-	do_bootm_linux(0, argc, argv, &images);
-#ifdef DEBUG
-	puts("\n## Control returned to monitor - resetting...\n");
-#endif
-	do_reset(cmdtp, flag, argc, argv);
-
-	return 1;
+	return ret;
 }
 
 #ifdef CONFIG_SYS_LONGHELP

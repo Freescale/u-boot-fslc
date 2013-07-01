@@ -38,6 +38,7 @@
 #define EXYNOS4_CLOCK_BASE		0x10030000
 #define EXYNOS4_SYSTIMER_BASE		0x10050000
 #define EXYNOS4_WATCHDOG_BASE		0x10060000
+#define EXYNOS4_TZPC_BASE		0x10110000
 #define EXYNOS4_MIU_BASE		0x10600000
 #define EXYNOS4_DMC0_BASE		0x10400000
 #define EXYNOS4_DMC1_BASE		0x10410000
@@ -74,6 +75,7 @@
 #define EXYNOS4X12_CLOCK_BASE		0x10030000
 #define EXYNOS4X12_SYSTIMER_BASE	0x10050000
 #define EXYNOS4X12_WATCHDOG_BASE	0x10060000
+#define EXYNOS4X12_TZPC_BASE		0x10110000
 #define EXYNOS4X12_DMC0_BASE		0x10600000
 #define EXYNOS4X12_DMC1_BASE		0x10610000
 #define EXYNOS4X12_GPIO_PART4_BASE	0x106E0000
@@ -107,6 +109,7 @@
 #define EXYNOS5_POWER_BASE		0x10040000
 #define EXYNOS5_SWRESET			0x10040400
 #define EXYNOS5_SYSREG_BASE		0x10050000
+#define EXYNOS5_TZPC_BASE		0x10100000
 #define EXYNOS5_WATCHDOG_BASE		0x101D0000
 #define EXYNOS5_ACE_SFR_BASE            0x10830000
 #define EXYNOS5_DMC_PHY0_BASE		0x10C00000
@@ -175,7 +178,7 @@ static inline char *s5p_get_cpu_name(void)
 }
 
 #define IS_SAMSUNG_TYPE(type, id)			\
-static inline int cpu_is_##type(void)			\
+static inline int __attribute__((no_instrument_function)) cpu_is_##type(void) \
 {							\
 	return (s5p_cpu_id >> 12) == id;		\
 }
@@ -184,7 +187,8 @@ IS_SAMSUNG_TYPE(exynos4, 0x4)
 IS_SAMSUNG_TYPE(exynos5, 0x5)
 
 #define IS_EXYNOS_TYPE(type, id)			\
-static inline int proid_is_##type(void)			\
+static inline int __attribute__((no_instrument_function)) \
+	proid_is_##type(void)				\
 {							\
 	return s5p_cpu_id == id;			\
 }
@@ -194,9 +198,10 @@ IS_EXYNOS_TYPE(exynos4412, 0x4412)
 IS_EXYNOS_TYPE(exynos5250, 0x5250)
 
 #define SAMSUNG_BASE(device, base)				\
-static inline unsigned int samsung_get_base_##device(void)	\
+static inline unsigned int __attribute__((no_instrument_function)) \
+	samsung_get_base_##device(void) \
 {								\
-	if (cpu_is_exynos4()) {					\
+	if (cpu_is_exynos4()) {				\
 		if (proid_is_exynos4412())			\
 			return EXYNOS4X12_##base;		\
 		return EXYNOS4_##base;				\
@@ -233,6 +238,7 @@ SAMSUNG_BASE(watchdog, WATCHDOG_BASE)
 SAMSUNG_BASE(power, POWER_BASE)
 SAMSUNG_BASE(spi, SPI_BASE)
 SAMSUNG_BASE(spi_isp, SPI_ISP_BASE)
+SAMSUNG_BASE(tzpc, TZPC_BASE)
 #endif
 
 #endif	/* _EXYNOS4_CPU_H */

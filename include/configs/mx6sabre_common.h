@@ -156,9 +156,9 @@
 				"if test $board_name = SABRESD && test $board_rev = MX6QP; then " \
 					"setenv fdt_file imx6qp-sabresd.dtb; fi; " \
 				"if test $board_name = SABRESD && test $board_rev = MX6Q; then " \
-					"setenv fdt_file imx6q-sabresd.dtb; fi; " \
+					"setenv fdt_file imx6q-sabresd-ldo.dtb; fi; " \
 				"if test $board_name = SABRESD && test $board_rev = MX6DL; then " \
-					"setenv fdt_file imx6dl-sabresd.dtb; fi; " \
+					"setenv fdt_file imx6dl-sabresd-ldo.dtb; fi; " \
 				"if test $fdt_file = undefined; then " \
 					"echo WARNING: Could not determine dtb to use; fi; " \
 			"fi;\0" \

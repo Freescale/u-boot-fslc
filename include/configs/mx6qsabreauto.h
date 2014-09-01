@@ -17,7 +17,7 @@
 #elif defined CONFIG_MX6DL
 #define CONFIG_DEFAULT_FDT_FILE	"imx6dl-sabreauto.dtb"
 #endif
-#define CONFIG_MMCROOT			"/dev/mmcblk0p2"
+#define CONFIG_MMCROOT			"/dev/mmcblk2p2"
 #define PHYS_SDRAM_SIZE		(2u * 1024 * 1024 * 1024)
 
 /* USB Configs */

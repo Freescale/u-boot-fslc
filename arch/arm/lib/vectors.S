@@ -48,7 +48,7 @@
 #endif
 
 _start:
-	ldr	pc, _reset
+	b	reset
 	ldr	pc, _undefined_instruction
 	ldr	pc, _software_interrupt
 	ldr	pc, _prefetch_abort
@@ -75,7 +75,6 @@ _start:
 	.globl	_irq
 	.globl	_fiq
 
-_reset:			.word reset
 _undefined_instruction:	.word undefined_instruction
 _software_interrupt:	.word software_interrupt
 _prefetch_abort:	.word prefetch_abort

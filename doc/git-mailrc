@@ -22,11 +22,12 @@ alias gruss          Graeme Russ <graeme.russ@gmail.com>
 alias hs             Heiko Schocher <hs@denx.de>
 alias ijc            Ian Campbell <ijc+uboot@hellion.org.uk>
 alias iwamatsu       Nobuhiro Iwamatsu <iwamatsu@nigauri.org>
-alias jagan	     Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
+alias jagan          Jagannadha Sutradharudu Teki <jagannadh.teki@gmail.com>
 alias jasonjin       Jason Jin <jason.jin@freescale.com>
 alias jhersh         Joe Hershberger <joe.hershberger@gmail.com>
 alias jwrdegoede     Hans de Goede <hdegoede@redhat.com>
 alias kimphill       Kim Phillips <kim.phillips@freescale.com>
+alias luka           Luka Perkov <luka.perkov@sartura.hr>
 alias lukma          Lukasz Majewski <l.majewski@samsung.com>
 alias macpaul        Macpaul Lin <macpaul@andestech.com>
 alias marex          Marek Vasut <marex@denx.de>
@@ -56,7 +57,7 @@ alias arm            uboot, aaribaud
 alias at91           uboot, abiessmann
 alias davinci        ti
 alias imx            uboot, sbabic
-alias kirkwood       uboot, prafulla
+alias kirkwood       uboot, prafulla, luka
 alias omap           ti
 alias pxa            uboot, marex
 alias rmobile        uboot, iwamatsu
@@ -121,7 +122,7 @@ alias kconfig        uboot, masahiro
 alias mmc            uboot, panto
 alias nand           uboot, scottwood
 alias net            uboot, jhersh
-alias spi	     uboot, jagan
+alias spi            uboot, jagan
 alias ubi            uboot, hs
 alias usb            uboot, marex
 alias video          uboot, ag

@@ -166,7 +166,7 @@
 			"setenv bootargs ${bootargs} " \
 				"video=mxcfb${nextcon}:dev=hdmi,1280x720M@60," \
 					"if=RGB24; " \
-			"setenv fbmen fbmem=28M; " \
+			"setenv fbmem fbmem=28M; " \
 			"setexpr nextcon ${nextcon} + 1; " \
 		"else " \
 			"echo - no HDMI monitor;" \

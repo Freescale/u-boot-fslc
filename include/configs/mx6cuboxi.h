@@ -29,6 +29,7 @@
 
 #define CONFIG_SYS_MALLOC_LEN		(2 * SZ_1M)
 #define CONFIG_BOARD_EARLY_INIT_F
+#define CONFIG_BOARD_LATE_INIT
 #define CONFIG_MXC_GPIO
 #define CONFIG_MXC_UART
 #define CONFIG_CMD_FUSE
@@ -81,15 +82,15 @@
 #define CONFIG_MXC_UART_BASE	UART1_BASE
 #define CONFIG_CONSOLE_DEV	"ttymxc0"
 #define CONFIG_MMCROOT		"/dev/mmcblk0p2"
-#define CONFIG_DEFAULT_FDT_FILE	"imx6q-hummingboard.dtb"
 #define CONFIG_SYS_FSL_USDHC_NUM	1
 #define CONFIG_SYS_MMC_ENV_DEV		0	/* SDHC2 */
 
+#define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
-	"fdt_addr=0x18000000\0" \
+	"fdtfile=undefined\0" \
+	"fdt_addr_r=0x18000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"console=" CONFIG_CONSOLE_DEV "\0" \
@@ -117,12 +118,12 @@
 	"bootscript=echo Running bootscript from mmc ...; " \
 		"source\0" \
 	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr_r} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
+				"bootz ${loadaddr} - ${fdt_addr_r}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
 					"bootz; " \
@@ -145,8 +146,8 @@
 		"fi; " \
 		"${get_cmd} ${image}; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
-				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"if ${get_cmd} ${fdt_addr_r} ${fdtfile}; then " \
+				"bootz ${loadaddr} - ${fdt_addr_r}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
 					"bootz; " \
@@ -156,9 +157,21 @@
 			"fi; " \
 		"else " \
 			"bootz; " \
-		"fi;\0"
+		"fi;\0" \
+	"findfdt="\
+		"if test $board_name = HUMMINGBOARD && test $board_rev = MX6Q ; then " \
+			"setenv fdtfile imx6q-hummingboard.dtb; fi; " \
+		"if test $board_name = HUMMINGBOARD && test $board_rev = MX6DL ; then " \
+			"setenv fdtfile imx6dl-hummingboard.dtb; fi; " \
+		"if test $board_name = CUBOXI && test $board_rev = MX6Q ; then " \
+			"setenv fdtfile imx6q-cubox-i.dtb; fi; " \
+		"if test $board_name = CUBOXI && test $board_rev = MX6DL ; then " \
+			"setenv fdtfile imx6dl-cubox-i.dtb; fi; " \
+		"if test $fdtfile = undefined; then " \
+			"echo WARNING: Could not determine dtb to use; fi; \0" \
 
 #define CONFIG_BOOTCOMMAND \
+	"run findfdt; " \
 	"mmc dev ${mmcdev};" \
 	"if mmc rescan; then " \
 		"if run loadbootscript; then " \

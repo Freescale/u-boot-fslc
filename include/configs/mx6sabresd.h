@@ -22,6 +22,9 @@
 
 #define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
 
+#define VIDEO_ARGS        "${video_args}"
+#define VIDEO_ARGS_SCRIPT "run video_args_script; "
+
 #include "mx6sabre_common.h"
 
 #define CONFIG_SYS_FSL_USDHC_NUM	3

@@ -11,6 +11,9 @@
 #define CFG_MXC_UART_BASE	UART1_BASE
 #define CONSOLE_DEV		"ttymxc0"
 
+#define VIDEO_ARGS        "${video_args}"
+#define VIDEO_ARGS_SCRIPT "run video_args_script; "
+
 #include "mx6sabre_common.h"
 
 /* Falcon Mode */

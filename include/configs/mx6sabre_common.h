@@ -42,6 +42,14 @@
 #define EMMC_ENV ""
 #endif
 
+#ifndef VIDEO_ARGS
+#define VIDEO_ARGS ""
+#endif
+
+#ifndef VIDEO_ARGS_SCRIPT
+#define VIDEO_ARGS_SCRIPT ""
+#endif
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
@@ -74,8 +82,22 @@
 			"fi; "	\
 		"fi\0" \
 	EMMC_ENV	  \
+	"video_args_hdmi=setenv video_args $video_args " \
+		"video=mxcfb${fb}:dev=hdmi,1280x720M@60,if=RGB24\0" \
+	"video_args_lvds=setenv video_args $video_args " \
+		"video=mxcfb${fb}:dev=ldb,LDB-XGA,if=RGB666\0" \
+	"video_args_lcd=setenv video_args $video_args " \
+		"video=mxcfb${fb}:dev=lcd,CLAA-WVGA,if=RGB666\0" \
+	"fb=0\0" \
+	"video_interfaces=hdmi lvds lcd\0" \
+	"video_args_script=" \
+		"for v in ${video_interfaces}; do " \
+			"run video_args_${v}; " \
+			"setexpr fb $fb + 1; " \
+		"done\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=PARTUUID=${uuid} rootwait rw\0" \
+		"root=PARTUUID=${uuid} rootwait rw " \
+		VIDEO_ARGS "\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; " \
@@ -84,6 +106,7 @@
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdtfile}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run finduuid; " \
+		VIDEO_ARGS_SCRIPT \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \

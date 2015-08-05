@@ -24,6 +24,9 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 /* Lowlevel init isn't used on i.MX28, so just have a dummy here */
+#if defined(__GNUC_STDC_INLINE__)  /* e.g. GCC 5.x default */
+extern
+#endif
 inline void lowlevel_init(void) {}
 
 void reset_cpu(ulong ignored) __attribute__((noreturn));

@@ -181,6 +181,8 @@
 					"setenv fdt_file imx6q-sabreauto.dtb; fi; " \
 				"if test $board_name = SABREAUTO && test $board_rev = MX6DL; then " \
 					"setenv fdt_file imx6dl-sabreauto.dtb; fi; " \
+				"if test $board_name = SABRESD && test $board_rev = MX6QP; then " \
+					"setenv fdt_file imx6qp-sabresd.dtb; fi; " \
 				"if test $board_name = SABRESD && test $board_rev = MX6Q; then " \
 					"setenv fdt_file imx6q-sabresd-ldo.dtb; fi; " \
 				"if test $board_name = SABRESD && test $board_rev = MX6DL; then " \

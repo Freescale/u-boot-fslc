@@ -31,6 +31,10 @@
 # define CONFIG_SF_DEFAULT_BUS		0
 #endif
 
+#define SR_BP0			BIT(2)	/* Block protect 0 */
+#define SR_BP1			BIT(3)	/* Block protect 1 */
+#define SR_BP2			BIT(4)	/* Block protect 2 */
+
 struct spi_slave;
 
 /**

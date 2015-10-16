@@ -27,6 +27,14 @@ int spi_flash_erase_dm(struct udevice *dev, u32 offset, size_t len)
 	return sf_get_ops(dev)->erase(dev, offset, len);
 }
 
+int spi_flash_protect_dm(struct udevice *dev, u32 offset, size_t len, bool prot)
+{
+	if (prot)
+		return sf_get_ops(dev)->lock(dev, offset, len);
+	else
+		return sf_get_ops(dev)->unlock(dev, offset, len);
+}
+
 /*
  * TODO(sjg@chromium.org): This is an old-style function. We should remove
  * it when all SPI flash drivers use dm

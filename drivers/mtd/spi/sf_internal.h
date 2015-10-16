@@ -168,6 +168,10 @@ int spi_flash_cmd_read_status(struct spi_flash *flash, u8 *rs);
 /* Program the status register */
 int spi_flash_cmd_write_status(struct spi_flash *flash, u8 ws);
 
+int stm_is_locked(struct spi_flash *nor, loff_t ofs, u32 len);
+int stm_lock(struct spi_flash *nor, u32 ofs, u32 len);
+int stm_unlock(struct spi_flash *nor, u32 ofs, u32 len);
+
 /* Read the config register */
 int spi_flash_cmd_read_config(struct spi_flash *flash, u8 *rc);
 
@@ -221,6 +225,10 @@ int spi_flash_read_common(struct spi_flash *flash, const u8 *cmd,
 /* Flash read operation, support all possible read commands */
 int spi_flash_cmd_read_ops(struct spi_flash *flash, u32 offset,
 		size_t len, void *data);
+
+int spi_flash_cmd_lock_ops(struct spi_flash *flash, u32 offset, size_t len);
+int spi_flash_cmd_unlock_ops(struct spi_flash *flash, u32 offset, size_t len);
+int spi_flash_cmd_is_locked_ops(struct spi_flash *flash, u32 offset, size_t len);
 
 #ifdef CONFIG_SPI_FLASH_MTD
 int spi_flash_mtd_register(struct spi_flash *flash);

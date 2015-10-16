@@ -149,6 +149,11 @@ static int spi_flash_validate_params(struct spi_slave *spi, u8 *idcode,
 #endif
 	flash->erase = spi_flash_cmd_erase_ops;
 	flash->read = spi_flash_cmd_read_ops;
+#if defined(CONFIG_SPI_FLASH_STMICRO)
+	flash->lock = spi_flash_cmd_lock_ops;
+	flash->unlock = spi_flash_cmd_unlock_ops;
+	flash->is_locked = spi_flash_cmd_is_locked_ops;
+#endif
 #endif
 
 	/* Compute the flash size */
@@ -469,6 +474,27 @@ int spi_flash_std_erase(struct udevice *dev, u32 offset, size_t len)
 	return spi_flash_cmd_erase_ops(flash, offset, len);
 }
 
+int spi_flash_std_lock(struct udevice *dev, u32 offset, size_t len)
+{
+	struct spi_flash *flash = dev_get_uclass_priv(dev);
+
+	return spi_flash_cmd_lock_ops(flash, offset, len);
+}
+
+int spi_flash_std_unlock(struct udevice *dev, u32 offset, size_t len)
+{
+	struct spi_flash *flash = dev_get_uclass_priv(dev);
+
+	return spi_flash_cmd_unlock_ops(flash, offset, len);
+}
+
+int spi_flash_std_is_locked(struct udevice *dev, u32 offset, size_t len)
+{
+	struct spi_flash *flash = dev_get_uclass_priv(dev);
+
+	return spi_flash_cmd_is_locked_ops(flash, offset, len);
+}
+
 int spi_flash_std_probe(struct udevice *dev)
 {
 	struct spi_slave *slave = dev_get_parentdata(dev);
@@ -485,6 +511,11 @@ static const struct dm_spi_flash_ops spi_flash_std_ops = {
 	.read = spi_flash_std_read,
 	.write = spi_flash_std_write,
 	.erase = spi_flash_std_erase,
+#if defined(CONFIG_SPI_FLASH_STMICRO)
+	.lock = spi_flash_std_lock,
+	.unlock = spi_flash_std_unlock,
+	.is_locked = spi_flash_std_is_locked,
+#endif
 };
 
 static const struct udevice_id spi_flash_std_ids[] = {

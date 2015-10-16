@@ -110,6 +110,9 @@ struct spi_flash {
 			const void *buf);
 	int (*erase)(struct spi_flash *flash, u32 offset, size_t len);
 #endif
+	int (*lock)(struct spi_flash *flash, u32 offset, size_t len);
+	int (*unlock)(struct spi_flash *flash, u32 offset, size_t len);
+	int (*is_locked)(struct spi_flash *flash, u32 offset, size_t len);
 };
 
 struct dm_spi_flash_ops {
@@ -117,6 +120,9 @@ struct dm_spi_flash_ops {
 	int (*write)(struct udevice *dev, u32 offset, size_t len,
 		     const void *buf);
 	int (*erase)(struct udevice *dev, u32 offset, size_t len);
+	int (*lock)(struct udevice *dev, u32 offset, size_t len);
+	int (*unlock)(struct udevice *dev, u32 offset, size_t len);
+	int (*is_locked)(struct udevice *dev, u32 offset, size_t len);
 };
 
 /* Access the serial operations for a device */
@@ -158,6 +164,20 @@ int spi_flash_write_dm(struct udevice *dev, u32 offset, size_t len,
  */
 int spi_flash_erase_dm(struct udevice *dev, u32 offset, size_t len);
 
+/**
+ * spi_flash_protect_dm() - Protect/unprotect blocks of the SPI flash
+ *
+ * Note that @len must be a muiltiple of the flash sector size.
+ *
+ * @dev:	SPI flash device
+ * @offset:	Offset into device in bytes to start erasing
+ * @len:	Number of bytes to erase
+ * @prot:	True: lock the block or False: unlock the block
+ * @return 0 if OK, -ve on error
+ */
+int spi_flash_protect_dm(struct udevice *dev, u32 offset, size_t len,
+			 bool prot);
+
 int spi_flash_probe_bus_cs(unsigned int busnum, unsigned int cs,
 			   unsigned int max_hz, unsigned int spi_mode,
 			   struct udevice **devp);
@@ -187,6 +207,15 @@ static inline int spi_flash_erase(struct spi_flash *flash, u32 offset,
 				  size_t len)
 {
 	return spi_flash_erase_dm(flash->dev, offset, len);
+}
+
+static inline int spi_flash_protect(struct spi_flash *flash, loff_t ofs,
+				    u32 len, bool prot)
+{
+	if (!flash->lock)
+		return -EOPNOTSUPP;
+
+	return spi_flash_protect_dm(flash->dev, ofs, len, prot);
 }
 
 struct sandbox_state;
@@ -230,6 +259,18 @@ static inline int spi_flash_erase(struct spi_flash *flash, u32 offset,
 		size_t len)
 {
 	return flash->erase(flash, offset, len);
+}
+
+static inline int spi_flash_protect(struct spi_flash *flash, u32 ofs, u32 len,
+				    bool prot)
+{
+	if (!flash->lock)
+		return -EOPNOTSUPP;
+
+	if (prot)
+		return flash->lock(flash, ofs, len);
+	else
+		return flash->unlock(flash, ofs, len);
 }
 #endif
 

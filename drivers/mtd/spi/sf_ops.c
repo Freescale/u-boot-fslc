@@ -277,6 +277,11 @@ int spi_flash_cmd_erase_ops(struct spi_flash *flash, u32 offset, size_t len)
 		return -1;
 	}
 
+	if (flash->is_locked(flash, offset, len) > 0) {
+		printf("offset 0x%x is protected and cannot be erased\n", offset);
+		return -EINVAL;
+	}
+
 	cmd[0] = flash->erase_cmd;
 	while (len) {
 		erase_addr = offset;
@@ -319,6 +324,11 @@ int spi_flash_cmd_write_ops(struct spi_flash *flash, u32 offset,
 
 	page_size = flash->page_size;
 
+	if (flash->is_locked(flash, offset, len) > 0) {
+		printf("offset 0x%x is protected and cannot be written\n", offset);
+		return -EINVAL;
+	}
+
 	cmd[0] = flash->write_cmd;
 	for (actual = 0; actual < len; actual += chunk_len) {
 		write_addr = offset;
@@ -355,6 +365,21 @@ int spi_flash_cmd_write_ops(struct spi_flash *flash, u32 offset,
 	}
 
 	return ret;
+}
+
+int spi_flash_cmd_lock_ops(struct spi_flash *flash, u32 offset, size_t len)
+{
+	return stm_lock(flash, offset, len);
+}
+
+int spi_flash_cmd_unlock_ops(struct spi_flash *flash, u32 offset, size_t len)
+{
+	return stm_unlock(flash, offset, len);
+}
+
+int spi_flash_cmd_is_locked_ops(struct spi_flash *flash, u32 offset, size_t len)
+{
+	return stm_is_locked(flash, offset, len);
 }
 
 int spi_flash_read_common(struct spi_flash *flash, const u8 *cmd,

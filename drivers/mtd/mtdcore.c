@@ -27,8 +27,8 @@
 #include <linux/gfp.h>
 #include <linux/slab.h>
 #else
-#include <linux/compat.h>
 #include <linux/err.h>
+#include <linux/log2.h>
 #include <ubi_uboot.h>
 #endif
 

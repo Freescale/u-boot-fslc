@@ -985,8 +985,7 @@ static void conv_ascii(unsigned char *dst, unsigned char *src, int len)
 	unsigned char *sptr = src;
 	unsigned char *dptr = dst;
 
-	while (remain)
-	{
+	while (remain) {
 		if (*sptr) {
 			*dptr = *sptr;
 			dptr++;
@@ -1016,8 +1015,7 @@ static bool is_2gb(void)
 
 	/* Congatec Part Numbers 104 and 105 have 2GiB of RAM */
 	conv_ascii(outbuf, data->pn, sizeof(data->pn));
-	if (!strcmp((const char *)outbuf, "016104") ||
-	    !strcmp((const char *)outbuf, "016105"))
+	if (!memcmp(outbuf, "016104", 6) || !memcmp(outbuf, "016105", 6))
 		return true;
 	else
 		return false;
@@ -1053,11 +1051,11 @@ static void spl_dram_init(int width)
 		mx6dq_dram_iocfg(width, &mx6q_ddr_ioregs, &mx6q_grp_ioregs);
 		mx6_dram_cfg(&sysinfo, &mx6q_mmcd_calib, &mem_ddr_2g);
 	} else if (is_cpu_type(MXC_CPU_MX6SOLO)) {
-		sysinfo.walat = 1; // add additional write latency for Solo and DualLite
+		sysinfo.walat = 1;
 		mx6sdl_dram_iocfg(width, &mx6dl_ddr_ioregs, &mx6sdl_grp_ioregs);
 		mx6_dram_cfg(&sysinfo, &mx6s_mmcd_calib, &mem_ddr_4g);
 	} else if (is_cpu_type(MXC_CPU_MX6DL)) {
-		sysinfo.walat = 1; // add additional write latency for Solo and DualLite
+		sysinfo.walat = 1;
 		mx6sdl_dram_iocfg(width, &mx6dl_ddr_ioregs, &mx6sdl_grp_ioregs);
 		mx6_dram_cfg(&sysinfo, &mx6dl_mmcd_calib, &mem_ddr_2g);
 	}

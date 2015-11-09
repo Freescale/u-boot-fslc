@@ -35,13 +35,15 @@
 #define EMMC_ENV ""
 #endif
 
-#ifndef VIDEO_ARGS
-#define VIDEO_ARGS ""
-#endif
+#define VIDEO_ARGS        "${video_args}"
+#define VIDEO_ARGS_SCRIPT "run video_args_script; "
 
-#ifndef VIDEO_ARGS_SCRIPT
-#define VIDEO_ARGS_SCRIPT ""
-#endif
+#define CONFIG_PREBOOT \
+	"if hdmidet; then " \
+		"setenv video_interfaces hdmi lvds; " \
+	"else " \
+		"setenv video_interfaces lvds hdmi; " \
+	"fi;"
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \
@@ -82,7 +84,6 @@
 	"video_args_lcd=setenv video_args $video_args " \
 		"video=mxcfb${fb}:dev=lcd,CLAA-WVGA,if=RGB666\0" \
 	"fb=0\0" \
-	"video_interfaces=hdmi lvds lcd\0" \
 	"video_args_script=" \
 		"for v in ${video_interfaces}; do " \
 			"run video_args_${v}; " \

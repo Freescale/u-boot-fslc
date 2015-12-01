@@ -23,6 +23,10 @@ This will generate the following binaries:
 Copy SPL and u-boot.img to the exported TFTP directory of the
 host PC (/tftpboot , for example).
 
+=> setenv ipaddr <ip of target board>
+
+=> setenv serverip <ip of tftp server>
+
 => sf probe
 
 => tftp 0x12000000 SPL

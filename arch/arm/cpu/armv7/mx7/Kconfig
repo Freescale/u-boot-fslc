@@ -25,12 +25,6 @@ config TARGET_WARP7
 	select DM
 	select DM_THERMAL
 
-config TARGET_WARP7
-	bool "warp7"
-	select MX7D
-	select DM
-	select DM_THERMAL
-
 endchoice
 
 config SYS_SOC

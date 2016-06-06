@@ -502,6 +502,9 @@ static int fec_open(struct eth_device *edev)
 		}
 		speed = fec->phydev->speed;
 	}
+#ifdef CONFIG_FEC_FIXED_SPEED
+	speed = CONFIG_FEC_FIXED_SPEED;
+#endif
 #else
 	miiphy_wait_aneg(edev);
 	speed = miiphy_speed(edev->name, fec->phy_id);

@@ -26,6 +26,7 @@
 #define CONFIG_SYS_FSL_TIMER_ADDR		0x023d0000
 #define CONFIG_SYS_FSL_PMU_CLTBENR		(CONFIG_SYS_FSL_PMU_ADDR + \
 						 0x18A0)
+#define FSL_PMU_PCTBENR_OFFSET (CONFIG_SYS_FSL_PMU_ADDR + 0x8A0)
 
 #define CONFIG_SYS_FSL_WRIOP1_ADDR		(CONFIG_SYS_IMMR + 0x7B80000)
 #define CONFIG_SYS_FSL_WRIOP1_MDIO1	(CONFIG_SYS_FSL_WRIOP1_ADDR + 0x16000)
@@ -128,6 +129,8 @@
 #define DCFG_PORSR1_RCW_SRC_NOR		0x12f00000
 #define DCFG_RCWSR13			0x130
 #define DCFG_RCWSR13_DSPI		(0 << 8)
+#define DCFG_RCWSR15			0x138
+#define DCFG_RCWSR15_IFCGRPABASE_QSPI	0x3
 
 #define DCFG_DCSR_BASE		0X700100000ULL
 #define DCFG_DCSR_PORCR1		0x000
@@ -139,6 +142,8 @@
 /* Supplemental Configuration */
 #define SCFG_BASE		0x01fc0000
 #define SCFG_USB3PRM1CR			0x000
+#define SCFG_USB3PRM1CR_INIT		0x27672b2a
+#define SCFG_QSPICLKCTLR	0x10
 
 #define TP_ITYP_AV		0x00000001	/* Initiator available */
 #define TP_ITYP_TYPE(x)	(((x) & 0x6) >> 1)	/* Initiator Type */
@@ -319,4 +324,7 @@ struct ccsr_reset {
 	u32 ip_rev1;			/* 0xbf8 */
 	u32 ip_rev2;			/* 0xbfc */
 };
+
+uint get_svr(void);
+
 #endif /* __ARCH_FSL_LSCH3_IMMAP_H_ */

@@ -11,14 +11,8 @@ obj-y += init/
 obj-y += main.o
 obj-y += exports.o
 obj-y += hash.o
-ifdef CONFIG_SYS_HUSH_PARSER
-obj-y += cli_hush.o
-endif
-
-# This option is not just y/n - it can have a numeric value
-ifdef CONFIG_BOOTDELAY
-obj-y += autoboot.o
-endif
+obj-$(CONFIG_HUSH_PARSER) += cli_hush.o
+obj-$(CONFIG_AUTOBOOT) += autoboot.o
 
 # This option is not just y/n - it can have a numeric value
 ifdef CONFIG_BOOT_RETRY_TIME
@@ -93,6 +87,7 @@ obj-$(CONFIG_USB_KEYBOARD) += usb_kbd.o
 endif # !CONFIG_SPL_BUILD
 
 ifdef CONFIG_SPL_BUILD
+obj-$(CONFIG_SPL_HASH_SUPPORT) += hash.o
 obj-$(CONFIG_ENV_IS_IN_FLASH) += env_flash.o
 obj-$(CONFIG_SPL_YMODEM_SUPPORT) += xyzModem.o
 obj-$(CONFIG_SPL_NET_SUPPORT) += miiphyutil.o

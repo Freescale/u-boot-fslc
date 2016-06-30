@@ -2,6 +2,11 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 
+dtb-$(CONFIG_AT91FAMILY) += at91sam9260-smartweb.dtb \
+	at91sam9g20-taurus.dtb \
+	at91sam9g45-corvus.dtb \
+	at91sam9g45-gurnard.dtb
+
 dtb-$(CONFIG_S5PC100) += s5pc1xx-smdkc100.dtb
 dtb-$(CONFIG_S5PC110) += s5pc1xx-goni.dtb
 dtb-$(CONFIG_EXYNOS4) += exynos4210-origen.dtb \
@@ -94,10 +99,14 @@ dtb-$(CONFIG_ARCH_ZYNQMP) += \
 	zynqmp-zc1751-xm016-dc2.dtb		\
 	zynqmp-zc1751-xm018-dc4.dtb		\
 	zynqmp-zc1751-xm019-dc5.dtb
-dtb-$(CONFIG_AM33XX) += am335x-boneblack.dtb am335x-bone.dtb am335x-evm.dtb \
+dtb-$(CONFIG_AM33XX) += am335x-boneblack.dtb am335x-bone.dtb \
+	am335x-draco.dtb \
+	am335x-evm.dtb \
 	am335x-evmsk.dtb \
 	am335x-bonegreen.dtb \
-	am335x-icev2.dtb
+	am335x-icev2.dtb \
+	am335x-pxm50.dtb \
+	am335x-rut.dtb
 dtb-$(CONFIG_AM43XX) += am437x-gp-evm.dtb am437x-sk-evm.dtb	\
 	am43x-epos-evm.dtb \
 	am437x-idk-evm.dtb
@@ -105,6 +114,7 @@ dtb-$(CONFIG_THUNDERX) += thunderx-88xx.dtb
 
 dtb-$(CONFIG_ARCH_SOCFPGA) +=				\
 	socfpga_arria5_socdk.dtb			\
+	socfpga_cyclone5_is1.dtb			\
 	socfpga_cyclone5_mcvevk.dtb			\
 	socfpga_cyclone5_socdk.dtb			\
 	socfpga_cyclone5_de0_nano_soc.dtb			\
@@ -114,7 +124,8 @@ dtb-$(CONFIG_ARCH_SOCFPGA) +=				\
 	socfpga_cyclone5_vining_fpga.dtb
 
 dtb-$(CONFIG_TARGET_DRA7XX_EVM) += dra72-evm.dtb dra7-evm.dtb
-dtb-$(CONFIG_TARGET_BEAGLE_X15) += am57xx-beagle-x15.dtb
+dtb-$(CONFIG_TARGET_AM57XX_EVM) += am57xx-beagle-x15.dtb \
+	am572x-idk.dtb
 dtb-$(CONFIG_TARGET_STV0991) += stv0991.dtb
 
 dtb-$(CONFIG_LS102XA) += ls1021a-qds-duart.dtb \
@@ -216,6 +227,8 @@ dtb-$(CONFIG_MACH_SUN7I) += \
 dtb-$(CONFIG_MACH_SUN8I_A23) += \
 	sun8i-a23-evb.dtb \
 	sun8i-a23-gt90h-v4.dtb \
+	sun8i-a23-inet86dz.dtb \
+	sun8i-a23-polaroid-mid2407pxe03.dtb \
 	sun8i-a23-polaroid-mid2809pxe04.dtb \
 	sun8i-a23-q8-tablet.dtb
 dtb-$(CONFIG_MACH_SUN8I_A33) += \

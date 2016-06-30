@@ -29,10 +29,12 @@
 #define CONFIG_FSL_CAAM			/* Enable SEC/CAAM */
 
 /* Link Definitions */
+#ifndef CONFIG_QSPI_BOOT
 #ifdef CONFIG_SPL
 #define CONFIG_SYS_TEXT_BASE		0x80400000
 #else
 #define CONFIG_SYS_TEXT_BASE		0x30100000
+#endif
 #endif
 
 #ifdef CONFIG_EMU
@@ -137,13 +139,6 @@
 
 #define CONFIG_SYS_FLASH1_BASE_PHYS		0xC0000000
 #define CONFIG_SYS_FLASH1_BASE_PHYS_EARLY	0x8000000
-
-#ifndef CONFIG_SYS_NO_FLASH
-#define CONFIG_FLASH_CFI_DRIVER
-#define CONFIG_SYS_FLASH_CFI
-#define CONFIG_SYS_FLASH_USE_BUFFER_WRITE
-#define CONFIG_SYS_FLASH_QUIET_TEST
-#endif
 
 #ifndef __ASSEMBLY__
 unsigned long long get_qixis_addr(void);
@@ -289,7 +284,7 @@ unsigned long long get_qixis_addr(void);
 #define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_NAND_U_BOOT_DST
 #define CONFIG_SYS_SPL_MALLOC_SIZE	0x00100000
 #define CONFIG_SYS_SPL_MALLOC_START	0x80200000
-#define CONFIG_SYS_MONITOR_LEN		(512 * 1024)
+#define CONFIG_SYS_MONITOR_LEN		(640 * 1024)
 
 #define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
 

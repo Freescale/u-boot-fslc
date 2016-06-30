@@ -304,13 +304,13 @@ config TARGET_VEXPRESS_CA9X4
 	bool "Support vexpress_ca9x4"
 	select CPU_V7
 
-config TARGET_KWB
-	bool "Support kwb"
+config TARGET_BRXRE1
+	bool "Support BRXRE1"
 	select CPU_V7
 	select SUPPORT_SPL
 
-config TARGET_TSERIES
-	bool "Support tseries"
+config TARGET_BRPPT1
+	bool "Support BRPPT1"
 	select CPU_V7
 	select SUPPORT_SPL
 
@@ -350,31 +350,49 @@ config TARGET_DRACO
 	bool "Support draco"
 	select CPU_V7
 	select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
 
 config TARGET_THUBAN
 	bool "Support thuban"
 	select CPU_V7
 	select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
 
 config TARGET_RASTABAN
 	bool "Support rastaban"
 	select CPU_V7
 	select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
 
 config TARGET_ETAMIN
         bool "Support etamin"
         select CPU_V7
         select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
 
 config TARGET_PXM2
 	bool "Support pxm2"
 	select CPU_V7
 	select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
 
 config TARGET_RUT
 	bool "Support rut"
 	select CPU_V7
 	select SUPPORT_SPL
+	select DM
+	select DM_SERIAL
+	select DM_GPIO
 
 config TARGET_PENGWYN
 	bool "Support pengwyn"
@@ -440,6 +458,10 @@ config TARGET_TI816X_EVM
 	bool "Support ti816x_evm"
 	select CPU_V7
 	select SUPPORT_SPL
+
+config TARGET_BCM23550_W1D
+	bool "Support bcm23550_w1d"
+	select CPU_V7
 
 config TARGET_BCM28155_AP
 	bool "Support bcm28155_ap"
@@ -557,6 +579,10 @@ config RMOBILE
 	bool "Renesas ARM SoCs"
 	select CPU_V7
 
+config TARGET_S32V234EVB
+	bool "Support s32v234evb"
+	select ARM64
+
 config ARCH_SNAPDRAGON
 	bool "Qualcomm Snapdragon SoCs"
 	select ARM64
@@ -584,16 +610,8 @@ config TARGET_CM_T43
 
 config ARCH_SUNXI
 	bool "Support sunxi (Allwinner) SoCs"
-	select CMD_BOOTZ
-	select CMD_DHCP
-	select CMD_EXT2
-	select CMD_EXT4
-	select CMD_FAT
-	select CMD_FS_GENERIC
 	select CMD_GPIO
-	select CMD_MII
 	select CMD_MMC if MMC
-	select CMD_PING
 	select CMD_USB
 	select DM
 	select DM_ETH
@@ -601,7 +619,6 @@ config ARCH_SUNXI
 	select DM_KEYBOARD
 	select DM_SERIAL
 	select DM_USB
-	select HUSH_PARSER
 	select OF_BOARD_SETUP
 	select OF_CONTROL
 	select OF_SEPARATE
@@ -611,6 +628,7 @@ config ARCH_SUNXI
 	select USB
 	select USB_STORAGE
 	select USB_KEYBOARD
+	select USE_TINY_PRINTF
 
 config TARGET_TS4800
 	bool "Support TS4800"
@@ -801,6 +819,7 @@ config ARCH_UNIPHIER
 	select SPL
 	select OF_CONTROL
 	select SPL_OF_CONTROL
+	select OF_LIBFDT
 	select DM
 	select SPL_DM
 	select DM_GPIO
@@ -889,8 +908,8 @@ source "arch/arm/cpu/armv8/Kconfig"
 source "arch/arm/imx-common/Kconfig"
 
 source "board/bosch/shc/Kconfig"
-source "board/BuR/kwb/Kconfig"
-source "board/BuR/tseries/Kconfig"
+source "board/BuR/brxre1/Kconfig"
+source "board/BuR/brppt1/Kconfig"
 source "board/CarMediaLab/flea3/Kconfig"
 source "board/Marvell/aspenite/Kconfig"
 source "board/Marvell/gplugd/Kconfig"
@@ -898,6 +917,7 @@ source "board/armadeus/apf27/Kconfig"
 source "board/armltd/vexpress/Kconfig"
 source "board/armltd/vexpress64/Kconfig"
 source "board/bluegiga/apx4devkit/Kconfig"
+source "board/broadcom/bcm23550_w1d/Kconfig"
 source "board/broadcom/bcm28155_ap/Kconfig"
 source "board/broadcom/bcmcygnus/Kconfig"
 source "board/broadcom/bcmnsp/Kconfig"
@@ -929,6 +949,7 @@ source "board/freescale/mx53ard/Kconfig"
 source "board/freescale/mx53evk/Kconfig"
 source "board/freescale/mx53loco/Kconfig"
 source "board/freescale/mx53smd/Kconfig"
+source "board/freescale/s32v234evb/Kconfig"
 source "board/freescale/vf610twr/Kconfig"
 source "board/gumstix/pepper/Kconfig"
 source "board/h2200/Kconfig"

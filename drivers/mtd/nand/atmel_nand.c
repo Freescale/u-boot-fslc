@@ -24,9 +24,9 @@
 
 /* Register access macros */
 #define ecc_readl(add, reg)				\
-	readl(AT91_BASE_SYS + add + ATMEL_ECC_##reg)
+	readl(add + ATMEL_ECC_##reg)
 #define ecc_writel(add, reg, value)			\
-	writel((value), AT91_BASE_SYS + add + ATMEL_ECC_##reg)
+	writel((value), add + ATMEL_ECC_##reg)
 
 #include "atmel_nand_ecc.h"	/* Hardware ECC registers */
 
@@ -1156,6 +1156,7 @@ int atmel_hwecc_nand_init_param(struct nand_chip *nand, struct mtd_info *mtd)
 	nand->ecc.hwctl = atmel_nand_hwctl;
 	nand->ecc.read_page = atmel_nand_read_page;
 	nand->ecc.bytes = 4;
+	nand->ecc.strength = 4;
 
 	if (nand->ecc.mode == NAND_ECC_HW) {
 		/* ECC is calculated for the whole page (1 step) */
@@ -1448,7 +1449,7 @@ int board_nand_init(struct nand_chip *nand)
 
 void nand_init(void)
 {
-	mtd = &nand_chip.mtd;
+	mtd = nand_to_mtd(&nand_chip);
 	mtd->writesize = CONFIG_SYS_NAND_PAGE_SIZE;
 	mtd->oobsize = CONFIG_SYS_NAND_OOBSIZE;
 	nand_chip.IO_ADDR_R = (void __iomem *)CONFIG_SYS_NAND_BASE;

@@ -10,6 +10,7 @@ obj-$(CONFIG_$(SPL_)RAM)	+= ram/
 
 ifdef CONFIG_SPL_BUILD
 
+obj-$(CONFIG_SPL_CRYPTO_SUPPORT) += crypto/
 obj-$(CONFIG_SPL_I2C_SUPPORT) += i2c/
 obj-$(CONFIG_SPL_GPIO_SUPPORT) += gpio/
 obj-$(CONFIG_SPL_MMC_SUPPORT) += mmc/
@@ -67,6 +68,7 @@ obj-$(CONFIG_U_QE) += qe/
 obj-y += mailbox/
 obj-y += memory/
 obj-y += pwm/
+obj-y += reset/
 obj-y += input/
 # SOC specific infrastructure drivers.
 obj-y += soc/

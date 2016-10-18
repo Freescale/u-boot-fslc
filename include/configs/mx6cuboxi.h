@@ -70,6 +70,9 @@
 #define CONFIG_SYS_FSL_USDHC_NUM	1
 #define CONFIG_SYS_MMC_ENV_DEV		0	/* SDHC2 */
 
+#define CONFIG_PARTITION_UUIDS
+#define CONFIG_CMD_PART
+
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 #ifndef CONFIG_SPL_BUILD
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -87,6 +90,7 @@
 	"console=" CONSOLE_DEV "\0" \
 	"bootm_size=0x10000000\0" \
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
+	"finduuid=part uuid mmc 0:2 uuid\0" \
 	"update_sd_firmware=" \
 		"if test ${ip_dyn} = yes; then " \
 			"setenv get_cmd dhcp; " \
@@ -115,6 +119,7 @@
 
 #define CONFIG_BOOTCOMMAND \
 	"run findfdt; " \
+	"run finduuid; " \
 	"run distro_bootcmd"
 
 #define BOOT_TARGET_DEVICES(func) \

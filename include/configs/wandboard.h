@@ -93,6 +93,9 @@
 #define CONFIG_IMX_HDMI
 #define CONFIG_IMX_VIDEO_SKIP
 
+#define CONFIG_PARTITION_UUIDS
+#define CONFIG_CMD_PART
+
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"console=ttymxc0,115200\0" \
@@ -105,7 +108,7 @@
 	"ip_dyn=yes\0" \
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=1\0" \
-	"mmcroot=/dev/mmcblk2p2 rootwait rw\0" \
+	"finduuid=part uuid mmc 0:2 uuid\0" \
 	"update_sd_firmware_filename=u-boot.imx\0" \
 	"update_sd_firmware=" \
 		"if test ${ip_dyn} = yes; then " \
@@ -173,6 +176,7 @@
 
 #define CONFIG_BOOTCOMMAND \
 	   "run findfdt; " \
+	   "run finduuid; " \
 	   "run distro_bootcmd"
 
 #include <config_distro_bootcmd.h>

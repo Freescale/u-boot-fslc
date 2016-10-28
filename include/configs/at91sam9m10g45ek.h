@@ -40,7 +40,6 @@
 #define	CONFIG_USART_ID			ATMEL_ID_SYS
 
 /* LCD */
-#define CONFIG_LCD
 #define LCD_BPP				LCD_COLOR8
 #define CONFIG_LCD_LOGO
 #undef LCD_TEST_PATTERN
@@ -49,7 +48,6 @@
 #define CONFIG_SYS_WHITE_ON_BLACK
 #define CONFIG_ATMEL_LCD
 #define CONFIG_ATMEL_LCD_RGB565
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 /* board specific(not enough SRAM) */
 #define CONFIG_AT91SAM9G45_LCD_BASE		0x73E00000
 

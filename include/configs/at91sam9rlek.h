@@ -44,7 +44,6 @@
 #define CONFIG_BAUDRATE			115200
 
 /* LCD */
-#define CONFIG_LCD			1
 #define LCD_BPP				LCD_COLOR8
 #define CONFIG_LCD_LOGO			1
 #undef LCD_TEST_PATTERN
@@ -55,7 +54,6 @@
 #define CONFIG_ATMEL_LCD_RGB565		1
 /* Let board_init_f handle the framebuffer allocation */
 #undef CONFIG_FB_ADDR
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV	1
 
 /* LED */
 #define CONFIG_AT91_LED

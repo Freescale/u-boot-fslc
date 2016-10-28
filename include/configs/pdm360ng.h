@@ -36,14 +36,10 @@
 
 /* Used for silent command in environment */
 #define CONFIG_SYS_DEVICE_NULLDEV
-#define CONFIG_SILENT_CONSOLE
 
 /* Video */
-#define CONFIG_VIDEO
 
 #if defined(CONFIG_VIDEO)
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_VGA_AS_SINGLE_DEVICE
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_VIDEO_BMP_RLE8

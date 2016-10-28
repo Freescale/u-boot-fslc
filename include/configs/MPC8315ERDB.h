@@ -357,11 +357,8 @@
 #define CONFIG_SYS_PCIE2_IO_PHYS	0xD1000000
 #define CONFIG_SYS_PCIE2_IO_SIZE	0x00800000
 
-#define CONFIG_PCI
 #define CONFIG_PCI_INDIRECT_BRIDGE
 #define CONFIG_PCIE
-
-#define CONFIG_PCI_PNP		/* do pci plug-and-play */
 
 #define CONFIG_EEPRO100
 #undef CONFIG_PCI_SCAN_SHOW	/* show pci devices on startup */

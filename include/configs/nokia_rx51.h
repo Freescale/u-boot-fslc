@@ -112,7 +112,6 @@
 #define CONFIG_USBD_MANUFACTURER	"Nokia"
 #define CONFIG_USBD_PRODUCT_NAME	"N900"
 
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define CONFIG_SYS_NO_FLASH
 
 /* commands to include */
@@ -225,13 +224,9 @@
  * Framebuffer
  */
 /* Video console */
-#define CONFIG_VIDEO
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_CFB_CONSOLE_ANSI	/* Enable ANSI escape codes in framebuffer */
 #define CONFIG_VIDEO_LOGO
 #define VIDEO_FB_16BPP_PIXEL_SWAP
 #define VIDEO_FB_16BPP_WORD_SWAP
-#define CONFIG_VIDEO_SW_CURSOR
 #define CONFIG_SPLASH_SCREEN
 
 /* functions for cfb_console */

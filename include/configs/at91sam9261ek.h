@@ -47,7 +47,6 @@
 #define CONFIG_BAUDRATE			115200
 
 /* LCD */
-#define CONFIG_LCD
 #define LCD_BPP				LCD_COLOR8
 #define CONFIG_LCD_LOGO
 #undef LCD_TEST_PATTERN
@@ -58,8 +57,6 @@
 #ifdef CONFIG_AT91SAM9261EK
 #define CONFIG_ATMEL_LCD_BGR555
 #endif
-
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 
 /* LED */
 #define CONFIG_AT91_LED

@@ -3,12 +3,15 @@
 
 # build U-Boot on Travis CI - https://travis-ci.org/
 
-sudo: true
+sudo: required
+dist: trusty
 
 language: c
 
 addons:
   apt:
+    sources:
+    - sourceline: 'ppa:gns3/qemu'
     packages:
     - cppcheck
     - sloccount
@@ -18,27 +21,26 @@ addons:
     - libsdl1.2-dev
     - python
     - python-virtualenv
-
-cache:
- - apt
+    - qemu-system-arm
+    - qemu-system-mips
+    - qemu-system-ppc
+    - qemu-system-x86
+    - gcc-powerpc-linux-gnu
+    - gcc-arm-linux-gnueabihf
+    - iasl
 
 install:
  # install latest device tree compiler
- - git clone --depth=1 https://git.kernel.org/pub/scm/utils/dtc/dtc.git /tmp/dtc
+ - git clone --depth=1 git://git.kernel.org/pub/scm/utils/dtc/dtc.git /tmp/dtc
  - make -j4 -C /tmp/dtc
+ # Clone uboot-test-hooks
+ - git clone --depth=1 git://github.com/swarren/uboot-test-hooks.git /tmp/uboot-test-hooks
+ - ln -s travis-ci /tmp/uboot-test-hooks/bin/`hostname`
+ - ln -s travis-ci /tmp/uboot-test-hooks/py/`hostname`
  # prepare buildman environment
  - export BUILDMAN_ROOT="root:"
- - export BUILDMAN_PPC="ppc:"
- - export BUILDMAN_ARM="arm:"
- - export BUILDMAN_SANDBOX="sandbox:"
- - echo -e "[toolchain]\n${BUILDMAN_ROOT} /\n" > ~/.buildman
- - echo -e "${BUILDMAN_PPC} /opt/eldk-5.4/powerpc/sysroots/i686-eldk-linux/usr/bin/powerpc-linux/\n" >> ~/.buildman
- - echo -e "${BUILDMAN_ARM} /opt/eldk-5.4/armv5te/sysroots/i686-eldk-linux/usr/bin/armv5te-linux-gnueabi/\n" >> ~/.buildman
- - echo -e "${BUILDMAN_SANDBOX} /usr/bin/gcc\n" >> ~/.buildman
- - export BUILDMAN_ALIAS="x86:"
- - export BUILDMAN_ALIAS_ARM="arm:"
- - echo -e "\n\n[toolchain-alias]\n${BUILDMAN_ALIAS} i386\n" >> ~/.buildman
- - echo -e "${BUILDMAN_ALIAS_ARM} armv5te\n" >> ~/.buildman
+ - echo -e "[toolchain]\n${BUILDMAN_ROOT} /usr" > ~/.buildman
+ - echo -e "\n[toolchain-alias]\nblackfin = bfin\nsh = sh4\nopenrisc = or32" >> ~/.buildman
  - cat ~/.buildman
  - virtualenv /tmp/venv
  - . /tmp/venv/bin/activate
@@ -46,7 +48,7 @@ install:
 
 env:
   global:
-    - PATH=/tmp/dtc:$PATH
+    - PATH=/tmp/dtc:/tmp/uboot-test-hooks/bin:$PATH
     - BUILD_DIR=build
     - HOSTCC="cc"
     - HOSTCXX="c++"
@@ -54,22 +56,26 @@ env:
 before_script:
   # install toolchains based on TOOLCHAIN} variable
   - if [[ "${TOOLCHAIN}" == *aarch64* ]]; then ./tools/buildman/buildman --fetch-arch aarch64 ; fi
-  - if [[ "${TOOLCHAIN}" == *arm* ]]; then wget ftp://ftp.denx.de/pub/eldk/5.4/targets/armv5te/eldk-eglibc-i686-arm-toolchain-gmae-5.4.sh ; fi
-  - if [[ "${TOOLCHAIN}" == *arm* ]]; then sh eldk-eglibc-i686-arm-toolchain-gmae-5.4.sh -y ; fi
   - if [[ "${TOOLCHAIN}" == *avr32* ]]; then ./tools/buildman/buildman --fetch-arch avr32 ; fi
-  - if [[ "${TOOLCHAIN}" == *i386* ]]; then ./tools/buildman/buildman sandbox --fetch-arch i386 ; fi
+  - if [[ "${TOOLCHAIN}" == *bfin* ]]; then ./tools/buildman/buildman --fetch-arch bfin ; fi
   - if [[ "${TOOLCHAIN}" == *m68k* ]]; then ./tools/buildman/buildman --fetch-arch m68k ; fi
+  - if [[ "${TOOLCHAIN}" == *microblaze* ]]; then ./tools/buildman/buildman --fetch-arch microblaze ; fi
   - if [[ "${TOOLCHAIN}" == *mips* ]]; then ./tools/buildman/buildman --fetch-arch mips ; fi
-  - if [[ "${TOOLCHAIN}" == *ppc* ]]; then wget ftp://ftp.denx.de/pub/eldk/5.4/targets/powerpc/eldk-eglibc-i686-powerpc-toolchain-gmae-5.4.sh ; fi
-  - if [[ "${TOOLCHAIN}" == *ppc* ]]; then sh eldk-eglibc-i686-powerpc-toolchain-gmae-5.4.sh -y ; fi
+  - if [[ "${TOOLCHAIN}" == *or32* ]]; then ./tools/buildman/buildman --fetch-arch or32 ; fi
+  - if [[ "${TOOLCHAIN}" == *sh4* ]]; then ./tools/buildman/buildman --fetch-arch sh4 ; fi
+  - if [[ "${TOOLCHAIN}" == *x86_64* ]]; then ./tools/buildman/buildman --fetch-arch x86_64 ; fi
+  - if [[ "${TOOLCHAIN}" == *xtensa* ]]; then ./tools/buildman/buildman --fetch-arch xtensa ; fi
 
 script:
- # the execution sequence for each test
- - if [[ "${TEST_CMD}" != "" ]]; then
-     ${TEST_CMD};
-   fi
+ # Exit code 129 means warnings only.
  - if [[ "${BUILDMAN}" != "" ]]; then
+     set +e;
      tools/buildman/buildman ${BUILDMAN};
+     if [[ "$?" == "0" || "$?" == "129" ]]; then
+       exit 0;
+     else
+       exit $?;
+     fi
    fi
 
 matrix:
@@ -78,112 +84,122 @@ matrix:
   # each env setting here is a dedicated build
     - env:
         - BUILDMAN="arm1136"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="arm1136"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="arm1176"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="arm720t"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="arm920t"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="atmel -x avr32"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="avr32"
           TOOLCHAIN="avr32"
     - env:
         - BUILDMAN="davinci"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="denx"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="freescale -x powerpc,m68k,aarch64"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="sandbox x86"
-          TOOLCHAIN="i386"
+          TOOLCHAIN="x86_64"
+      script:
+        - export BUILDMAN_X86="x86:";
+          echo -e "\n[toolchain-prefix]\n${BUILDMAN_X86} ${HOME}/.buildman-toolchains/gcc-4.9.0-nolibc/x86_64-linux/bin/x86_64-linux-" >> ~/.buildman
     - env:
         - BUILDMAN="kirkwood"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="m68k"
           TOOLCHAIN="m68k"
+    - env:
+        - BUILDMAN="microblaze"
+          TOOLCHAIN="microblaze"
     - env:
         - BUILDMAN="mips"
           TOOLCHAIN="mips"
     - env:
         - BUILDMAN="mpc512x"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc5xx"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc5xxx"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc8260"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc83xx"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc85xx -x freescale"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc85xx -x t208xrdb -x t4qds -x t102* -x p1_p2_rdb_pc -x p1010rdb -x corenet_ds -x b4860qds -x sbc8548 -x bsc91*"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="t208xrdb t4qds t102*"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="p1_p2_rdb_pc p1010rdb"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="corenet_ds b4860qds sbc8548 bsc91*"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc86xx"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="mpc8xx"
-          TOOLCHAIN="ppc"
     - env:
         - BUILDMAN="siemens"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="ti"
-          TOOLCHAIN="arm"
     - env:
         - BUILDMAN="aarch64"
           TOOLCHAIN="aarch64"
+    - env:
+        - BUILDMAN="sh4"
+          TOOLCHAIN="sh4"
+    - env:
+        - BUILDMAN="xtensa"
+          TOOLCHAIN="xtensa"
 
     # QA jobs for code analytics
     # static code analysis with cppcheck (we can add --enable=all later)
-    - env:
-        - TEST_CMD="cppcheck --force --quiet --inline-suppr ."
+    - script:
+        - cppcheck --force --quiet --inline-suppr .
     # search for TODO within source tree
-    - env:
-        - TEST_CMD="grep -r TODO ."
+    - script:
+        - grep -r TODO .
     # search for FIXME within source tree
-    - env:
-        - TEST_CMD="grep -r FIXME ."
+    - script:
+        - grep -r FIXME .
     # search for HACK within source tree and ignore HACKKIT board
-    - env:
-        - TEST_CMD="grep -r HACK . | grep -v HACKKIT"
       script:
         - grep -r HACK . | grep -v HACKKIT
     # some statistics about the code base
-    - env:
-        - TEST_CMD="sloccount ."
+    - script:
+        - sloccount .
     # test/py
+    - script:
+        - ./test/py/test.py --bd sandbox --build
     - env:
-        - TEST_CMD="./test/py/test.py --bd sandbox --build"
+        - CROSS_COMPILE="/usr/bin/arm-linux-gnueabihf-"
+      script:
+        - ./test/py/test.py --bd vexpress_ca15_tc2 --id qemu --build;
+          ./test/py/test.py --bd vexpress_ca9x4 --id qemu --build;
+          ./test/py/test.py --bd integratorcp_cm926ejs --id qemu --build;
+    - env:
+        - TOOLCHAIN="mips"
+          CROSS_COMPILE="${HOME}/.buildman-toolchains/gcc-4.9.0-nolibc/mips-linux/bin/mips-linux-"
+      script:
+        - ./test/py/test.py --bd qemu_mips --build -k 'not sleep';
+          ./test/py/test.py --bd qemu_mipsel --build -k 'not sleep';
+          ./test/py/test.py --bd qemu_mips64 --build -k 'not sleep';
+          ./test/py/test.py --bd qemu_mips64el --build -k 'not sleep';
+    - env:
+        - CROSS_COMPILE="/usr/bin/powerpc-linux-gnu-"
+      script:
+        - ./test/py/test.py --bd qemu-ppce500 --build -k 'not sleep'
+    - env:
+        - TOOLCHAIN="x86_64"
+          BUILD_ROM=yes
+          CROSS_COMPILE="${HOME}/.buildman-toolchains/gcc-4.9.0-nolibc/x86_64-linux/bin/x86_64-linux-"
+      script:
+        - ./test/py/test.py --bd qemu-x86 --build -k 'not sleep'
 
 # TODO make it perfect ;-r

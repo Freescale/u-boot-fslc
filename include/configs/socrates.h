@@ -25,7 +25,6 @@
 
 #define	CONFIG_SYS_TEXT_BASE	0xfff80000
 
-#define CONFIG_PCI
 #define CONFIG_PCI_INDIRECT_BRIDGE
 
 #define CONFIG_TSEC_ENET		/* tsec ethernet support	*/
@@ -168,18 +167,12 @@
 #define CONFIG_SYS_BR2_PRELIM		0xc80018a1	/* UPMB, 32-bit	*/
 #define CONFIG_SYS_OR2_PRELIM		0xfc000000	/* 64 MB	*/
 
-#define CONFIG_VIDEO
 #define CONFIG_VIDEO_MB862xx
 #define CONFIG_VIDEO_MB862xx_ACCEL
-#define CONFIG_CFB_CONSOLE
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_VIDEO_BMP_LOGO
-#define CONFIG_CONSOLE_EXTRA_INFO
 #define VIDEO_FB_16BPP_PIXEL_SWAP
 #define VIDEO_FB_16BPP_WORD_SWAP
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-#define CONFIG_VIDEO_SW_CURSOR
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_VIDEO_BMP_GZIP
 #define CONFIG_SYS_VIDEO_LOGO_MAX_SIZE	(2 << 20)	/* decompressed img */
@@ -251,7 +244,6 @@
 #define CONFIG_SYS_PCI1_IO_SIZE	0x01000000	/* 16M			*/
 
 #if defined(CONFIG_PCI)
-#define CONFIG_PCI_PNP			/* do pci plug-and-play		*/
 #undef CONFIG_PCI_SCAN_SHOW		/* show pci devices on startup	*/
 #endif	/* CONFIG_PCI */
 

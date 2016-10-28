@@ -770,59 +770,6 @@ The following options need to be configured:
 		port routines must be defined elsewhere
 		(i.e. serial_init(), serial_getc(), ...)
 
-		CONFIG_CFB_CONSOLE
-		Enables console device for a color framebuffer. Needs following
-		defines (cf. smiLynxEM, i8042)
-			VIDEO_FB_LITTLE_ENDIAN	graphic memory organisation
-						(default big endian)
-			VIDEO_HW_RECTFILL	graphic chip supports
-						rectangle fill
-						(cf. smiLynxEM)
-			VIDEO_HW_BITBLT		graphic chip supports
-						bit-blit (cf. smiLynxEM)
-			VIDEO_VISIBLE_COLS	visible pixel columns
-						(cols=pitch)
-			VIDEO_VISIBLE_ROWS	visible pixel rows
-			VIDEO_PIXEL_SIZE	bytes per pixel
-			VIDEO_DATA_FORMAT	graphic data format
-						(0-5, cf. cfb_console.c)
-			VIDEO_FB_ADRS		framebuffer address
-			VIDEO_KBD_INIT_FCT	keyboard int fct
-						(i.e. rx51_kp_init())
-			VIDEO_TSTC_FCT		test char fct
-						(i.e. rx51_kp_tstc)
-			VIDEO_GETC_FCT		get char fct
-						(i.e. rx51_kp_getc)
-			CONFIG_VIDEO_LOGO	display Linux logo in
-						upper left corner
-			CONFIG_VIDEO_BMP_LOGO	use bmp_logo.h instead of
-						linux_logo.h for logo.
-						Requires CONFIG_VIDEO_LOGO
-			CONFIG_CONSOLE_EXTRA_INFO
-						additional board info beside
-						the logo
-			CONFIG_HIDE_LOGO_VERSION
-						do not display bootloader
-						version string
-
-		When CONFIG_CFB_CONSOLE_ANSI is defined, console will support
-		a limited number of ANSI escape sequences (cursor control,
-		erase functions and limited graphics rendition control).
-
-		When CONFIG_CFB_CONSOLE is defined, video console is
-		default i/o. Serial console can be forced with
-		environment 'console=serial'.
-
-		When CONFIG_SILENT_CONSOLE is defined, all console
-		messages (by U-Boot and Linux!) can be silenced with
-		the "silent" environment variable. See
-		doc/README.silent for more information.
-
-		CONFIG_SYS_CONSOLE_BG_COL: define the backgroundcolor, default
-			is 0x00.
-		CONFIG_SYS_CONSOLE_FG_COL: define the foregroundcolor, default
-			is 0xa0.
-
 - Console Baudrate:
 		CONFIG_BAUDRATE - in bps
 		Select one of the baudrates listed in
@@ -836,23 +783,6 @@ The following options need to be configured:
 		If using CONFIG_SYS_SMC_RXBUFLEN also CONFIG_SYS_MAXIDLE
 		must be defined, to setup the maximum idle timeout for
 		the SMC.
-
-- Pre-Console Buffer:
-		Prior to the console being initialised (i.e. serial UART
-		initialised etc) all console output is silently discarded.
-		Defining CONFIG_PRE_CONSOLE_BUFFER will cause U-Boot to
-		buffer any console messages prior to the console being
-		initialised to a buffer of size CONFIG_PRE_CON_BUF_SZ
-		bytes located at CONFIG_PRE_CON_BUF_ADDR. The buffer is
-		a circular buffer, so if more than CONFIG_PRE_CON_BUF_SZ
-		bytes are output before the console is initialised, the
-		earlier bytes are discarded.
-
-		Note that when printing the buffer a copy is made on the
-		stack so CONFIG_PRE_CON_BUF_SZ must fit on the stack.
-
-		'Sane' compilers will generate smaller code if
-		CONFIG_PRE_CON_BUF_SZ is a power of 2
 
 - Autoboot Command:
 		CONFIG_BOOTCOMMAND
@@ -1684,45 +1614,6 @@ CBFS (Coreboot Filesystem) support
 		instead.
 
 - Video support:
-		CONFIG_VIDEO
-
-		Define this to enable video support (for output to
-		video).
-
-		CONFIG_VIDEO_CT69000
-
-		Enable Chips & Technologies 69000 Video chip
-
-		CONFIG_VIDEO_SMI_LYNXEM
-		Enable Silicon Motion SMI 712/710/810 Video chip. The
-		video output is selected via environment 'videoout'
-		(1 = LCD and 2 = CRT). If videoout is undefined, CRT is
-		assumed.
-
-		For the CT69000 and SMI_LYNXEM drivers, videomode is
-		selected via environment 'videomode'. Two different ways
-		are possible:
-		- "videomode=num"   'num' is a standard LiLo mode numbers.
-		Following standard modes are supported	(* is default):
-
-		      Colors	640x480 800x600 1024x768 1152x864 1280x1024
-		-------------+---------------------------------------------
-		      8 bits |	0x301*	0x303	 0x305	  0x161	    0x307
-		     15 bits |	0x310	0x313	 0x316	  0x162	    0x319
-		     16 bits |	0x311	0x314	 0x317	  0x163	    0x31A
-		     24 bits |	0x312	0x315	 0x318	    ?	    0x31B
-		-------------+---------------------------------------------
-		(i.e. setenv videomode 317; saveenv; reset;)
-
-		- "videomode=bootargs" all the video parameters are parsed
-		from the bootargs. (See drivers/video/videomodes.c)
-
-
-		CONFIG_VIDEO_SED13806
-		Enable Epson SED13806 driver. This driver supports 8bpp
-		and 16bpp modes defined by CONFIG_VIDEO_SED13806_8BPP
-		or CONFIG_VIDEO_SED13806_16BPP
-
 		CONFIG_FSL_DIU_FB
 		Enable the Freescale DIU video driver.	Reference boards for
 		SOCs that have a DIU should define this macro to enable DIU
@@ -1802,12 +1693,6 @@ CBFS (Coreboot Filesystem) support
 		here, since it is cheaper to change data cache settings on
 		a per-section basis.
 
-		CONFIG_CONSOLE_SCROLL_LINES
-
-		When the console need to be scrolled, this is the number of
-		lines to scroll by. It defaults to 1. Increasing this makes
-		the console jump but can help speed up operation when scrolling
-		is slow.
 
 		CONFIG_LCD_ROTATION
 
@@ -3641,21 +3526,6 @@ Configuration Settings:
 
 - CONFIG_SYS_BAUDRATE_TABLE:
 		List of legal baudrate settings for this board.
-
-- CONFIG_SYS_CONSOLE_INFO_QUIET
-		Suppress display of console information at boot.
-
-- CONFIG_SYS_CONSOLE_IS_IN_ENV
-		If the board specific function
-			extern int overwrite_console (void);
-		returns 1, the stdin, stderr and stdout are switched to the
-		serial port, else the settings in the environment are used.
-
-- CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
-		Enable the call to overwrite_console().
-
-- CONFIG_SYS_CONSOLE_ENV_OVERWRITE
-		Enable overwrite of previous console environment settings.
 
 - CONFIG_SYS_MEMTEST_START, CONFIG_SYS_MEMTEST_END:
 		Begin and End addresses of the area used by the

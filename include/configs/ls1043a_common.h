@@ -117,7 +117,6 @@
 #define CONFIG_SYS_I2C_MXC_I2C4
 
 /* PCIe */
-#define CONFIG_PCI		/* Enable PCI/PCIE */
 #define CONFIG_PCIE1		/* PCIE controller 1 */
 #define CONFIG_PCIE2		/* PCIE controller 2 */
 #define CONFIG_PCIE3		/* PCIE controller 3 */
@@ -141,7 +140,6 @@
 
 #ifdef CONFIG_PCI
 #define CONFIG_NET_MULTI
-#define CONFIG_PCI_PNP
 #define CONFIG_E1000
 #define CONFIG_PCI_SCAN_SHOW
 #define CONFIG_CMD_PCI

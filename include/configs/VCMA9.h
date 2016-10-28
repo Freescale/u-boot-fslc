@@ -100,11 +100,9 @@
 /* USB support (currently only works with D-cache off) */
 #define CONFIG_USB_OHCI
 #define CONFIG_USB_OHCI_S3C24XX
-#define CONFIG_USB_KEYBOARD
 #define CONFIG_DOS_PARTITION
 
 /* Enable needed helper functions */
-#define CONFIG_SYS_STDIO_DEREGISTER	/* needs stdio_deregister */
 
 /* RTC */
 #define CONFIG_RTC_S3C24X0

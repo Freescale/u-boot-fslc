@@ -57,7 +57,7 @@
 	"rescue_sys_length=f10000\0" \
 	"panel=lb07wv8\0" \
 	"splashpos=m,m\0" \
-	"console=" CONFIG_CONSOLE_DEV "\0" \
+	"console=" CONSOLE_DEV "\0" \
 	"fdt_high=0xffffffff\0"	  \
 	"initrd_high=0xffffffff\0" \
 	"addmtd=setenv bootargs ${bootargs} ${mtdparts}\0" \
@@ -229,13 +229,8 @@
 #define CONFIG_IMX_WATCHDOG
 
 /* Framebuffer */
-#define CONFIG_VIDEO
 #define CONFIG_VIDEO_IPUV3
 /* check this console not needed, after test remove it */
-#define CONFIG_CFB_CONSOLE
-#define CONFIG_VGA_AS_SINGLE_DEVICE
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
-#define CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE
 #define CONFIG_VIDEO_BMP_RLE8
 #define CONFIG_SPLASH_SCREEN
 #define CONFIG_SPLASH_SCREEN_ALIGN

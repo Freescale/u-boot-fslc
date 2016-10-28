@@ -35,7 +35,6 @@
 #define CONFIG_BAUDRATE		9600	/* ... at 9600 bps */
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200, 230400 }
 /* define to enable silent console */
-#define CONFIG_SILENT_CONSOLE
 #define CONFIG_SYS_DEVICE_NULLDEV	1	/* include nulldev device */
 
 /*
@@ -43,10 +42,8 @@
  * 0x40000000 - 0x4fffffff - PCI Memory
  * 0x50000000 - 0x50ffffff - PCI IO Space
  */
-#define CONFIG_PCI
 
 #if defined(CONFIG_PCI)
-#define CONFIG_PCI_PNP		1
 #define CONFIG_PCI_SCAN_SHOW	1
 #define CONFIG_PCIAUTO_SKIP_HOST_BRIDGE	1
 

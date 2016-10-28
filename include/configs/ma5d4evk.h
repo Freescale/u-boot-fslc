@@ -21,7 +21,6 @@
  */
 #define CONFIG_DOS_PARTITION
 #define CONFIG_FAT_WRITE
-/*#define CONFIG_LCD*/
 
 /*
  * Memory configurations
@@ -82,7 +81,6 @@
 #define LCD_BPP				LCD_COLOR16
 #define LCD_OUTPUT_BPP                  24
 #define CONFIG_ATMEL_HLCD
-#define CONFIG_SYS_CONSOLE_IS_IN_ENV
 #endif
 
 /*

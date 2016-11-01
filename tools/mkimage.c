@@ -64,6 +64,7 @@ static int show_valid_options(enum ih_category category)
 			genimg_get_cat_name(category, item));
 	}
 	fprintf(stderr, "\n");
+	free(order);
 
 	return 0;
 }
@@ -88,7 +89,7 @@ static void usage(const char *msg)
 		params.cmdname);
 	fprintf(stderr,
 		"       %s [-D dtc_options] [-f fit-image.its|-f auto|-F] [-b <dtb> [-b <dtb>]] fit-image\n"
-		"           <dtb> file is used with -f auto, it may occour multiple times.\n",
+		"           <dtb> file is used with -f auto, it may occur multiple times.\n",
 		params.cmdname);
 	fprintf(stderr,
 		"          -D => set all options for device tree compiler\n"

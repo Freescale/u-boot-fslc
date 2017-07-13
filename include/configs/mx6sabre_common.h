@@ -59,13 +59,8 @@
 
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
-#ifndef VIDEO_ARGS
-#define VIDEO_ARGS ""
-#endif
-
-#ifndef VIDEO_ARGS_SCRIPT
-#define VIDEO_ARGS_SCRIPT ""
-#endif
+#define VIDEO_ARGS        "${video_args}"
+#define VIDEO_ARGS_SCRIPT "run video_args_script; "
 
 #define CONFIG_PREBOOT \
 	"if hdmidet; then " \

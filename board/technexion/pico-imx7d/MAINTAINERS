@@ -4,3 +4,4 @@ S:	Maintained
 F:	board/technexion/pico-imx7d/
 F:	include/configs/pico-imx7d.h
 F:	configs/pico-imx7d_defconfig
+F:	configs/pico-imx7d_secure_defconfig

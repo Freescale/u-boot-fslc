@@ -99,19 +99,19 @@
 #define CONFIG_SYS_LOAD_ADDR	CONFIG_LOADADDR
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"script=boot.scr\0" \
-	"image=zImage\0" \
+	"script=/boot/boot.scr\0" \
+	"image=/boot/zImage\0" \
 	"console=ttymxc0\0" \
 	"splashpos=m,m\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
+	"fdt_file=/boot/" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"fdt_addr=0x82000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=1\0" \
-	"mmcroot=/dev/mmcblk0p2 rootwait rw\0" \
+	"mmcroot=/dev/mmcblk0p1 rootwait rootfstype=ext4 rw\0" \
 	"update_sd_firmware_filename=u-boot.imx\0" \
 	"update_sd_firmware=" \
 		"if test ${ip_dyn} = yes; then " \

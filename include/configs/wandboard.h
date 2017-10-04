@@ -114,9 +114,9 @@
 		"if test $board_name = D1 && test $board_rev = MX6DL ; then " \
 			"setenv fdtfile imx6dl-wandboard-revd1.dtb; fi; " \
 		"if test $board_name = C1 && test $board_rev = MX6Q ; then " \
-			"setenv fdtfile imx6q-wandboard-revc1.dtb; fi; " \
+			"setenv fdtfile imx6q-wandboard.dtb; fi; " \
 		"if test $board_name = C1 && test $board_rev = MX6DL ; then " \
-			"setenv fdtfile imx6dl-wandboard-revc1.dtb; fi; " \
+			"setenv fdtfile imx6dl-wandboard.dtb; fi; " \
 		"if test $board_name = B1 && test $board_rev = MX6Q ; then " \
 			"setenv fdtfile imx6q-wandboard-revb1.dtb; fi; " \
 		"if test $board_name = B1 && test $board_rev = MX6DL ; then " \

@@ -850,8 +850,10 @@ static int fsl_esdhc_init(struct fsl_esdhc_priv *priv,
 			cfg->host_caps &= ~MMC_MODE_4BIT;
 	}
 
+#if !defined(CONFIG_MX25) && !defined(CONFIG_MX51)
 	if (caps & ESDHC_HOSTCAPBLT_HSS)
 		cfg->host_caps |= MMC_MODE_HS_52MHz | MMC_MODE_HS;
+#endif
 
 #ifdef CONFIG_ESDHC_DETECT_8_BIT_QUIRK
 	if (CONFIG_ESDHC_DETECT_8_BIT_QUIRK)

@@ -45,6 +45,16 @@ u32 spl_boot_device(void)
 	if (is_usbotg_phy_active())
 		return BOOT_DEVICE_BOARD;
 
+	/**
+	 * To support SD/MMC Manufacture Mode, we check that BOOT_MODE == 0
+	 * and that BT_FUSE_SEL == 0. If this was disabled via
+	 * blowing DISABLE_SDMMC_MFG, or if SDMMC MFG mode failed,
+	 * we would be in USB download mode, which the previous line would 
+	 * have detected.
+	 */
+	if (((bmode >> 24) & 0x03) == 0x00 && (bmode >> 4) == 0x00)
+		return BOOT_DEVICE_MMC1;
+
 	/* BOOT_CFG1[7:4] - see IMX6DQRM Table 8-8 */
 	switch ((reg & IMX6_BMODE_MASK) >> IMX6_BMODE_SHIFT) {
 	 /* EIM: See 8.5.1, Table 8-9 */

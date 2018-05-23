@@ -64,8 +64,8 @@ enum imx6_bmode_serial_rom {
 };
 
 enum imx6_bmode_emi {
-	IMX6_BMODE_ONENAND,
 	IMX6_BMODE_NOR,
+	IMX6_BMODE_ONENAND
 };
 
 enum imx6_bmode {

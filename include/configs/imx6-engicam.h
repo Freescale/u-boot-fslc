@@ -44,7 +44,6 @@
 	"boot_fdt=try\0" \
 	"mmcpart=1\0" \
 	"nandroot=ubi0:rootfs rootfstype=ubifs\0" \
-	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
 		"root=${mmcroot}\0" \
 	"ubiargs=setenv bootargs console=${console},${baudrate} " \

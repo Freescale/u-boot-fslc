@@ -61,7 +61,6 @@
 	"fdt_addr=0x83000000\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
-	"mmcautodetect=yes\0" \
 	CONFIG_DFU_ENV_SETTINGS \
 	"finduuid=part uuid mmc 0:2 uuid\0" \
 	"partitions=" \

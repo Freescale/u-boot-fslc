@@ -109,7 +109,7 @@
 			"setexpr fb $fb + 1; " \
 		"done\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
-		"root=PARTUUID=${uuid} rootwait rw\0" \
+		"root=PARTUUID=${uuid} rootwait rw " \
 		VIDEO_ARGS "\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \

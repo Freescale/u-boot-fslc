@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'V':
-			printf("dumpimage version %s\n", PLAIN_VERSION);
+			printf("dumpimage version %ld\n", _POSIX_VERSION);
 			exit(EXIT_SUCCESS);
 		default:
 			usage();

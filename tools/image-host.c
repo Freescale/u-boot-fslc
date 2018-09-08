@@ -124,7 +124,7 @@ static int fit_image_write_sig(void *fit, int noffset, uint8_t *value,
 	}
 	if (!ret) {
 		ret = fdt_setprop_string(fit, noffset, "signer-version",
-				  PLAIN_VERSION);
+				  _POSIX_VERSION);
 	}
 	if (comment && !ret)
 		ret = fdt_setprop_string(fit, noffset, "comment", comment);

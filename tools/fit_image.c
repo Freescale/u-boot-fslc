@@ -330,7 +330,7 @@ static int fit_build_fdt(struct image_tool_params *params, char *fdt, int size)
 	fdt_property_strf(fdt, "description",
 			  "%s image with one or more FDT blobs",
 			  genimg_get_type_name(params->fit_image_type));
-	fdt_property_strf(fdt, "creator", "U-Boot mkimage %s", PLAIN_VERSION);
+	fdt_property_strf(fdt, "creator", "U-Boot mkimage %s", _POSIX_VERSION);
 	fdt_property_u32(fdt, "#address-cells", 1);
 	ret = fit_write_images(params, fdt);
 	if (ret)

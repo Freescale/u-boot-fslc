@@ -273,7 +273,7 @@ static void process_args(int argc, char **argv)
 			params.vflag++;
 			break;
 		case 'V':
-			printf("mkimage version %s\n", PLAIN_VERSION);
+			printf("mkimage version %ld\n", _POSIX_VERSION);
 			exit(EXIT_SUCCESS);
 		case 'x':
 			params.xflag++;

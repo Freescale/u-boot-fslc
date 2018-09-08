@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 			usage(prg);
 			return EXIT_SUCCESS;
 		case 'V':
-			printf("%s version %s\n", prg, PLAIN_VERSION);
+			printf("%s version %ld\n", prg, _POSIX_VERSION);
 			return EXIT_SUCCESS;
 		case ':':
 			fprintf(stderr, "Missing argument for option -%c\n",

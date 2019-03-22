@@ -51,7 +51,14 @@ Use the default environment variables:
 
 2. Flashing U-Boot into the eMMC
 
-Run the DFU agent so we can flash the new images using dfu-util tool:
+The  default  U-Boot   environment  expects  the  use   of  eMMC  user
+partition. To ensure we are using  the proper eMMC partition for boot,
+please run:
+
+=> mmc partconf 0 0 0 0
+
+Next, run the DFU agent so we can flash the new images using dfu-util
+tool:
 
 => dfu 0 mmc 0
 

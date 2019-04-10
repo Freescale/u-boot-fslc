@@ -65,9 +65,11 @@
 #define BOOTMENU_ENV \
 	"bootmenu_0=Boot using PICO-Dwarf baseboard=" \
 		"setenv fdtfile imx6ul-pico-dwarf.dtb\0" \
-	"bootmenu_1=Boot using PICO-Hobbit baseboard=" \
+	"bootmenu_1=Boot using PICO-Nymph baseboard=" \
+		"setenv fdtfile imx6ul-pico-nymph.dtb\0" \
+	"bootmenu_2=Boot using PICO-Hobbit baseboard=" \
 		"setenv fdtfile imx6ul-pico-hobbit.dtb\0" \
-	"bootmenu_2=Boot using PICO-Pi baseboard=" \
+	"bootmenu_3=Boot using PICO-Pi baseboard=" \
 		"setenv fdtfile imx6ul-pico-pi.dtb\0" \
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1

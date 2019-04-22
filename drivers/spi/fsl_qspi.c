@@ -836,7 +836,7 @@ int qspi_xfer(struct fsl_qspi_priv *priv, unsigned int bitlen,
 	    (priv->cur_seqid == QSPI_CMD_BRWR))
 		qspi_ahb_invalid(priv);
 #endif
-
+	udelay(250);
 	return 0;
 }
 

@@ -256,6 +256,7 @@ struct efi_loaded_image_obj {
  * struct efi_event
  *
  * @link:		Link to list of all events
+ * @queue_link:		Link to the list of queued events
  * @type:		Type of event, see efi_create_event
  * @notify_tpl:		Task priority level of notifications
  * @nofify_function:	Function to call when the event is triggered
@@ -264,11 +265,11 @@ struct efi_loaded_image_obj {
  * @trigger_time:	Period of the timer
  * @trigger_next:	Next time to trigger the timer
  * @trigger_type:	Type of timer, see efi_set_timer
- * @is_queued:		The notification function is queued
  * @is_signaled:	The event occurred. The event is in the signaled state.
  */
 struct efi_event {
 	struct list_head link;
+	struct list_head queue_link;
 	uint32_t type;
 	efi_uintn_t notify_tpl;
 	void (EFIAPI *notify_function)(struct efi_event *event, void *context);
@@ -277,7 +278,6 @@ struct efi_event {
 	u64 trigger_next;
 	u64 trigger_time;
 	enum efi_timer_delay trigger_type;
-	bool is_queued;
 	bool is_signaled;
 };
 
@@ -432,7 +432,7 @@ efi_status_t efi_create_event(uint32_t type, efi_uintn_t notify_tpl,
 efi_status_t efi_set_timer(struct efi_event *event, enum efi_timer_delay type,
 			   uint64_t trigger_time);
 /* Call this to signal an event */
-void efi_signal_event(struct efi_event *event, bool check_tpl);
+void efi_signal_event(struct efi_event *event);
 
 /* open file system: */
 struct efi_simple_file_system_protocol *efi_simple_file_system(
@@ -572,6 +572,9 @@ static inline int guidcmp(const efi_guid_t *g1, const efi_guid_t *g2)
  */
 #define __efi_runtime_data __attribute__ ((section (".data.efi_runtime")))
 #define __efi_runtime __attribute__ ((section (".text.efi_runtime")))
+
+/* Indicate supported runtime services */
+efi_status_t efi_init_runtime_supported(void);
 
 /* Update CRC32 in table header */
 void __efi_runtime efi_update_table_header_crc32(struct efi_table_hdr *table);

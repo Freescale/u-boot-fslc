@@ -82,6 +82,16 @@
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
 
+#define BOOTMENU_ENV                               \
+	"bootmenu_0=Boot using PICO-Hobbit baseboard=" \
+		"setenv baseboard hobbit; saveenv; run base_boot\0" \
+	"bootmenu_1=Boot using PICO-Pi baseboard=" \
+		"setenv baseboard pi; saveenv; run base_boot\0" \
+	"bootmenu_2=Boot using PICO-Dwarf baseboard=" \
+		"setenv baseboard dwarf; saveenv; run base_boot\0" \
+	"bootmenu_3=Boot using PICO-Nymph baseboard=" \
+		"setenv baseboard nymph; saveenv; run base_boot\0" \
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"image=zImage\0" \
 	"splashpos=m,m\0" \

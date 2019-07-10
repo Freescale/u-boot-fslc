@@ -93,7 +93,8 @@ dtb-$(CONFIG_ROCKCHIP_RK3288) += \
 	rk3288-vyasa.dtb
 
 dtb-$(CONFIG_ROCKCHIP_RK3328) += \
-	rk3328-evb.dtb
+	rk3328-evb.dtb \
+	rk3328-rock64.dtb
 
 dtb-$(CONFIG_ROCKCHIP_RK3368) += \
 	rk3368-lion.dtb \
@@ -342,6 +343,7 @@ dtb-$(CONFIG_FSL_LSCH2) += fsl-ls1043a-qds-duart.dtb \
 	fsl-ls1046a-qds-duart.dtb \
 	fsl-ls1046a-qds-lpuart.dtb \
 	fsl-ls1046a-rdb.dtb \
+	fsl-ls1046a-frwy.dtb \
 	fsl-ls1012a-qds.dtb \
 	fsl-ls1012a-rdb.dtb \
 	fsl-ls1012a-2g5rdb.dtb \
@@ -535,15 +537,14 @@ dtb-$(CONFIG_VF610) += vf500-colibri.dtb \
 	vf610-bk4r1.dtb
 
 dtb-$(CONFIG_MX53) += imx53-cx9020.dtb \
-	imx53-kp.dtb
+	imx53-kp.dtb \
+	imx53-m53menlo.dtb
 
 dtb-$(CONFIG_MX6Q) += \
 	imx6-apalis.dtb \
 	imx6q-display5.dtb \
 	imx6q-logicpd.dtb \
-	imx6q-novena.dtb
-
-dtb-$(CONFIG_TARGET_TBS2910) += \
+	imx6q-novena.dtb \
 	imx6q-tbs2910.dtb
 
 dtb-$(CONFIG_MX6QDL) += \
@@ -551,21 +552,21 @@ dtb-$(CONFIG_MX6QDL) += \
 	imx6dl-icore-mipi.dtb \
 	imx6dl-icore-rqs.dtb \
 	imx6dl-mamoj.dtb \
+	imx6dl-sabreauto.dtb \
+	imx6dl-sabresd.dtb \
+	imx6dl-wandboard-revb1.dtb \
 	imx6q-cm-fx6.dtb \
 	imx6q-icore.dtb \
 	imx6q-icore-mipi.dtb \
 	imx6q-icore-rqs.dtb \
 	imx6q-sabreauto.dtb \
 	imx6q-sabresd.dtb \
-	imx6dl-sabreauto.dtb \
-	imx6dl-sabresd.dtb \
+	imx6q-wandboard-revb1.dtb \
 	imx6qp-sabreauto.dtb \
 	imx6qp-sabresd.dtb \
 	imx6dl-pico.dtb \
 	imx6q-pico.dtb \
-
-dtb-$(CONFIG_TARGET_WANDBOARD) += \
-	imx6dl-wandboard-revb1.dtb
+	imx6qp-wandboard-revd1.dtb
 
 dtb-$(CONFIG_MX6SL) += imx6sl-evk.dtb
 
@@ -738,14 +739,19 @@ dtb-$(CONFIG_TARGET_VINCO) += \
 	at91-vinco.dtb
 
 dtb-$(CONFIG_ARCH_BCM283X) += \
-	bcm2835-rpi-a-plus.dtb \
 	bcm2835-rpi-a.dtb \
+	bcm2835-rpi-a-plus.dtb \
+	bcm2835-rpi-b.dtb \
 	bcm2835-rpi-b-plus.dtb \
 	bcm2835-rpi-b-rev2.dtb \
-	bcm2835-rpi-b.dtb \
-	bcm2835-rpi-zero-w.dtb \
+	bcm2835-rpi-cm1-io1.dtb \
+	bcm2835-rpi-zero.dtb \
+	bcm2835-rpi-zero-w.dtb\
 	bcm2836-rpi-2-b.dtb \
-	bcm2837-rpi-3-b.dtb
+	bcm2837-rpi-3-a-plus.dtb \
+	bcm2837-rpi-3-b.dtb \
+	bcm2837-rpi-3-b-plus.dtb \
+	bcm2837-rpi-cm3-io3.dtb
 
 dtb-$(CONFIG_ARCH_BCM63158) += \
 	bcm963158.dtb

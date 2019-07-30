@@ -1,8 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000
  * Paolo Scaffardi, AIRVENT SAM s.p.a - RIMINI(ITALY), arsenio@tin.it
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -847,7 +846,7 @@ done:
 
 #ifdef CONFIG_SYS_CONSOLE_ENV_OVERWRITE
 	/* set the environment variables (will overwrite previous env settings) */
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < MAX_FILES; i++) {
 		env_set(stdio_names[i], stdio_devices[i]->name);
 	}
 #endif /* CONFIG_SYS_CONSOLE_ENV_OVERWRITE */
@@ -926,7 +925,7 @@ int console_init_r(void)
 #endif /* CONFIG_SYS_CONSOLE_INFO_QUIET */
 
 	/* Setting environment variables */
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < MAX_FILES; i++) {
 		env_set(stdio_names[i], stdio_devices[i]->name);
 	}
 

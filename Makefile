@@ -1,11 +1,9 @@
-#
-# SPDX-License-Identifier:	GPL-2.0+
-#
+# SPDX-License-Identifier: GPL-2.0+
 
 VERSION = 2018
 PATCHLEVEL = 05
 SUBLEVEL =
-EXTRAVERSION = -rc3
+EXTRAVERSION =
 NAME =
 
 # *DOCUMENTATION*

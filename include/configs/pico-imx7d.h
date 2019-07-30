@@ -1,9 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2017 NXP Semiconductors
  *
  * Configuration settings for the i.MX7D Pico board.
- *
- * SPDX-License-Identifier:    GPL-2.0+
  */
 
 #ifndef __PICO_IMX7D_CONFIG_H
@@ -42,7 +41,7 @@
 	"console=ttymxc4\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
-	"fdt_file=/boot/imx7d-pico.dtb\0" \
+	"fdt_file=/boot/imx7d-pico-pi.dtb\0" \
 	"fdt_addr=0x83000000\0" \
 	"ip_dyn=yes\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \

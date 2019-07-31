@@ -44,6 +44,25 @@ u32 spl_boot_device(void)
 	if (is_usbotg_phy_active())
 		return BOOT_DEVICE_BOARD;
 
+	/**
+	 * To support SD/MMC Manufacture Mode found on some i.MX6 parts, 
+	 * we check that BOOT_MODE == 0 and that BT_FUSE_SEL == 0. 
+	 * These will be nonzero if the BMODE has actually been programmed,
+	 * so we'll skip to the actual Boot Configuration check next. We don't 
+	 * need to check if this particular i.MX6 supports this mode, or whether
+	 * the user blew DISABLE_SDMMC_MFG or if SDMMC MFG mode failed,
+	 * since the only way we'd be running with unprogrammed fuses would
+	 * would have been through Serial mode, which we check above.
+	 * 
+	 * Technically, the boot ROM on supported devices attempts this mode 
+	 * before moving onto the serial downloader, but there's no documented 
+	 * way of  detecting we're in this mode. As a caveat, to use this mode 
+	 * the user must not have a USB connection active otherwise we'll think 
+	 * we're in serial download mode.
+	 */
+	if (((bmode >> 24) & 0x03) == 0x00 && (bmode >> 4) == 0x00)
+		return BOOT_DEVICE_MMC1;
+
 	/* BOOT_CFG1[7:4] - see IMX6DQRM Table 8-8 */
 	switch ((reg & IMX6_BMODE_MASK) >> IMX6_BMODE_SHIFT) {
 	 /* EIM: See 8.5.1, Table 8-9 */

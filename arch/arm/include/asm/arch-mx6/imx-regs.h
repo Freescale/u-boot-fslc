@@ -967,6 +967,7 @@ struct pwm_regs {
  * If boot from the other mode, USB0_PWD will keep reset value
  */
 #define	is_boot_from_usb(void) (!(readl(USB_PHY0_BASE_ADDR) & (1<<20)))
+#define	disconnect_from_pc(void) writel(0x0, USB_PHY0_BASE_ADDR + 0x140)
 
 #endif /* __ASSEMBLY__ */
 #endif /* __ASM_ARCH_MX6_IMX_REGS_H__ */

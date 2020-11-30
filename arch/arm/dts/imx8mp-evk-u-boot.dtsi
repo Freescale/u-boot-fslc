@@ -126,10 +126,14 @@
 
 &usdhc2 {
 	u-boot,dm-spl;
+	u-boot,sd-uhs-sdr104;
+	u-boot,sd-uhs-ddr50;
 };
 
 &usdhc3 {
 	u-boot,dm-spl;
+	u-boot,mmc-hs400-1_8v;
+	u-boot,mmc-hs400-enhanced-strobe;
 };
 
 &wdog1 {

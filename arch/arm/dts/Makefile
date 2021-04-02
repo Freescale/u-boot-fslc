@@ -700,6 +700,7 @@ dtb-y += \
 	imx6dl-mamoj.dtb \
 	imx6dl-nitrogen6x.dtb \
 	imx6dl-pico.dtb \
+	imx6dl-udoo.dtb \
 	imx6dl-riotboard.dtb \
 	imx6dl-sabreauto.dtb \
 	imx6dl-sabresd.dtb \
@@ -749,6 +750,7 @@ dtb-y += \
 	imx6q-novena.dtb \
 	imx6q-pico.dtb \
 	imx6q-phytec-mira-rdk-nand.dtb \
+	imx6q-udoo.dtb \
 	imx6q-sabreauto.dtb \
 	imx6q-sabrelite.dtb \
 	imx6q-sabresd.dtb \

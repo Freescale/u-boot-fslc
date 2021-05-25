@@ -237,6 +237,12 @@ dtb-$(CONFIG_ARCH_MVEBU) +=			\
 	armada-xp-maxbcm.dtb			\
 	armada-xp-synology-ds414.dtb		\
 	armada-xp-theadorable.dtb		\
+	cn9130-db-A.dtb				\
+	cn9130-db-B.dtb				\
+	cn9131-db-A.dtb				\
+	cn9131-db-B.dtb				\
+	cn9132-db-A.dtb				\
+	cn9132-db-B.dtb				\
 	cn9130-crb-A.dtb			\
 	cn9130-crb-B.dtb
 
@@ -305,6 +311,10 @@ dtb-$(CONFIG_ARCH_ZYNQMP) += \
 	zynqmp-mini-emmc1.dtb			\
 	zynqmp-mini-nand.dtb			\
 	zynqmp-mini-qspi.dtb			\
+	zynqmp-sm-k26-revA.dtb			\
+	zynqmp-smk-k26-revA.dtb			\
+	zynqmp-sck-kv-g-revA.dtbo		\
+	zynqmp-sck-kv-g-revB.dtbo		\
 	zynqmp-topic-miamimp-xilinx-xdp-v1r1.dtb	\
 	zynqmp-zcu100-revC.dtb			\
 	zynqmp-zcu102-revA.dtb			\
@@ -811,6 +821,7 @@ dtb-$(CONFIG_ARCH_MX6) += \
 
 dtb-$(CONFIG_MX7) += imx7d-sdb.dtb \
 	imx7d-sdb-qspi.dtb \
+	imx7-cm.dtb \
 	imx7-colibri-emmc.dtb \
 	imx7-colibri-rawnand.dtb \
 	imx7s-warp.dtb \
@@ -835,6 +846,8 @@ dtb-$(CONFIG_ARCH_IMX8) += \
 
 dtb-$(CONFIG_ARCH_IMX8M) += \
 	imx8mm-evk.dtb \
+	imx8mm-icore-mx8mm-ctouch2.dtb \
+	imx8mm-icore-mx8mm-edimm2.2.dtb \
 	imx8mm-venice.dtb \
 	imx8mm-venice-gw71xx-0x.dtb \
 	imx8mm-venice-gw72xx-0x.dtb \
@@ -842,6 +855,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
 	imx8mm-verdin.dtb \
 	phycore-imx8mm.dtb \
 	imx8mn-ddr4-evk.dtb \
+	imx8mq-cm.dtb \
 	imx8mn-evk.dtb \
 	imx8mq-evk.dtb \
 	imx8mm-beacon-kit.dtb \
@@ -1056,6 +1070,10 @@ dtb-$(CONFIG_SOC_K3_J721E) += k3-j721e-common-proc-board.dtb \
 			      k3-j721e-r5-common-proc-board.dtb \
 			      k3-j7200-common-proc-board.dtb \
 			      k3-j7200-r5-common-proc-board.dtb
+dtb-$(CONFIG_SOC_K3_AM642) += k3-am642-evm.dtb \
+			      k3-am642-r5-evm.dtb \
+			      k3-am642-sk.dtb \
+			      k3-am642-r5-sk.dtb
 
 dtb-$(CONFIG_ARCH_MEDIATEK) += \
 	mt7622-rfb.dtb \
@@ -1082,6 +1100,8 @@ dtb-$(CONFIG_TARGET_TOTAL_COMPUTE) += total_compute.dtb
 dtb-$(CONFIG_TARGET_DURIAN) += phytium-durian.dtb
 
 dtb-$(CONFIG_TARGET_PRESIDIO_ASIC) += ca-presidio-engboard.dtb
+
+dtb-$(CONFIG_TARGET_IMX8MM_CL_IOT_GATE) += imx8mm-cl-iot-gate.dtb
 
 targets += $(dtb-y)
 

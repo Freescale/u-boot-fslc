@@ -3,7 +3,7 @@
 VERSION = 2021
 PATCHLEVEL = 07
 SUBLEVEL =
-EXTRAVERSION = -rc2
+EXTRAVERSION = -rc3
 NAME =
 
 # *DOCUMENTATION*
@@ -408,7 +408,7 @@ AWK		= awk
 PERL		= perl
 PYTHON		?= python
 PYTHON2		= python2
-PYTHON3		= python3
+PYTHON3		?= python3
 DTC		?= $(objtree)/scripts/dtc/dtc
 CHECK		= sparse
 
@@ -676,6 +676,31 @@ else
 KBUILD_CFLAGS	+= -O2
 endif
 
+LTO_CFLAGS :=
+LTO_FINAL_LDFLAGS :=
+export LTO_CFLAGS LTO_FINAL_LDFLAGS
+ifdef CONFIG_LTO
+	ifeq ($(cc-name),clang)
+		LTO_CFLAGS		+= -flto
+		LTO_FINAL_LDFLAGS	+= -flto
+
+		AR			= $(shell $(CC) -print-prog-name=llvm-ar)
+		NM			= $(shell $(CC) -print-prog-name=llvm-nm)
+	else
+		NPROC			:= $(shell nproc 2>/dev/null || echo 1)
+		LTO_CFLAGS		+= -flto=$(NPROC)
+		LTO_FINAL_LDFLAGS	+= -fuse-linker-plugin -flto=$(NPROC)
+
+		# use plugin aware tools
+		AR			= $(CROSS_COMPILE)gcc-ar
+		NM			= $(CROSS_COMPILE)gcc-nm
+	endif
+
+	CFLAGS_NON_EFI			+= $(LTO_CFLAGS)
+
+	KBUILD_CFLAGS			+= $(LTO_CFLAGS)
+endif
+
 ifeq ($(CONFIG_STACKPROTECTOR),y)
 KBUILD_CFLAGS += $(call cc-option,-fstack-protector-strong)
 CFLAGS_EFI += $(call cc-option,-fno-stack-protector)
@@ -918,6 +943,7 @@ endif
 endif
 INPUTS-$(CONFIG_TPL) += tpl/u-boot-tpl.bin
 INPUTS-$(CONFIG_OF_SEPARATE) += u-boot.dtb
+INPUTS-$(CONFIG_BINMAN_STANDALONE_FDT) += u-boot.dtb
 ifeq ($(CONFIG_SPL_FRAMEWORK),y)
 INPUTS-$(CONFIG_OF_SEPARATE) += u-boot-dtb.img
 endif
@@ -970,6 +996,8 @@ LDFLAGS_u-boot += $(LDFLAGS_FINAL)
 
 # Avoid 'Not enough room for program headers' error on binutils 2.28 onwards.
 LDFLAGS_u-boot += $(call ld-option, --no-dynamic-linker)
+
+LDFLAGS_u-boot += --build-id=none
 
 ifeq ($(CONFIG_ARC)$(CONFIG_NIOS2)$(CONFIG_X86)$(CONFIG_XTENSA),)
 LDFLAGS_u-boot += -Ttext $(CONFIG_SYS_TEXT_BASE)
@@ -1086,10 +1114,8 @@ ifneq ($(CONFIG_DM),y)
 	@echo >&2 "See doc/driver-model/migration.rst for more info."
 	@echo >&2 "===================================================="
 endif
-	$(call deprecated,CONFIG_DM_MMC CONFIG_BLK,MMC,v2019.04,$(CONFIG_MMC))
 	$(call deprecated,CONFIG_DM_USB CONFIG_OF_CONTROL CONFIG_BLK,\
 		USB,v2019.07,$(CONFIG_USB))
-	$(call deprecated,CONFIG_AHCI,AHCI,v2019.07, $(CONFIG_LIBATA))
 	$(call deprecated,CONFIG_DM_PCI,PCI,v2019.07,$(CONFIG_PCI))
 	$(call deprecated,CONFIG_DM_VIDEO,video,v2019.07,\
 		$(CONFIG_LCD)$(CONFIG_VIDEO))
@@ -1287,6 +1313,7 @@ cmd_binman = $(srctree)/tools/binman/binman $(if $(BINMAN_DEBUG),-D) \
 		-I . -I $(srctree) -I $(srctree)/board/$(BOARDDIR) \
 		-I arch/$(ARCH)/dts -a of-list=$(CONFIG_OF_LIST) \
 		-a atf-bl31-path=${BL31} \
+		-a opensbi-path=${OPENSBI} \
 		-a default-dt=$(default_dt) \
 		-a scp-path=$(SCP) \
 		-a spl-bss-pad=$(if $(CONFIG_SPL_SEPARATE_BSS),,1) \
@@ -1391,7 +1418,7 @@ u-boot-lzma.img: u-boot.bin.lzma FORCE
 
 u-boot-dtb.img u-boot.img u-boot.kwb u-boot.pbl u-boot-ivt.img: \
 		$(if $(CONFIG_SPL_LOAD_FIT),u-boot-nodtb.bin \
-			$(if $(CONFIG_OF_SEPARATE)$(CONFIG_OF_EMBED)$(CONFIG_OF_HOSTFILE),dts/dt.dtb) \
+			$(if $(CONFIG_OF_SEPARATE)$(CONFIG_OF_EMBED)$(CONFIG_OF_HOSTFILE)$(CONFIG_BINMAN_STANDALONE_FDT),dts/dt.dtb) \
 		,$(UBOOT_BIN)) FORCE
 	$(call if_changed,mkimage)
 	$(BOARD_SIZE_CHECK)
@@ -1493,8 +1520,14 @@ u-boot.cnt: u-boot.bin FORCE
 flash.bin: spl/u-boot-spl.bin u-boot.cnt FORCE
 	$(Q)$(MAKE) $(build)=arch/arm/mach-imx $@
 else
+ifeq ($(CONFIG_BINMAN),y)
+flash.bin: spl/u-boot-spl.bin $(INPUTS-y) FORCE
+	$(call if_changed,binman)
+	$(Q)$(MAKE) $(build)=arch/arm/mach-imx $@
+else
 flash.bin: spl/u-boot-spl.bin u-boot.itb FORCE
 	$(Q)$(MAKE) $(build)=arch/arm/mach-imx $@
+endif
 endif
 endif
 
@@ -1702,14 +1735,54 @@ u-boot-swap.bin: u-boot.bin FORCE
 
 ARCH_POSTLINK := $(wildcard $(srctree)/arch/$(ARCH)/Makefile.postlink)
 
+# Generate linker list symbols references to force compiler to not optimize
+# them away when compiling with LTO
+ifdef CONFIG_LTO
+u-boot-keep-syms-lto := keep-syms-lto.o
+u-boot-keep-syms-lto_c := $(patsubst %.o,%.c,$(u-boot-keep-syms-lto))
+
+quiet_cmd_keep_syms_lto = KSL     $@
+      cmd_keep_syms_lto = \
+	NM=$(NM) $(srctree)/scripts/gen_ll_addressable_symbols.sh $^ >$@
+
+quiet_cmd_keep_syms_lto_cc = KSLCC   $@
+      cmd_keep_syms_lto_cc = \
+	$(CC) $(filter-out $(LTO_CFLAGS),$(c_flags)) -c -o $@ $<
+
+$(u-boot-keep-syms-lto_c): $(u-boot-main)
+	$(call if_changed,keep_syms_lto)
+$(u-boot-keep-syms-lto): $(u-boot-keep-syms-lto_c)
+	$(call if_changed,keep_syms_lto_cc)
+else
+u-boot-keep-syms-lto :=
+endif
+
 # Rule to link u-boot
 # May be overridden by arch/$(ARCH)/config.mk
+ifdef CONFIG_LTO
+quiet_cmd_u-boot__ ?= LTO     $@
+      cmd_u-boot__ ?= 								\
+		$(CC) -nostdlib -nostartfiles					\
+		$(LTO_FINAL_LDFLAGS) $(c_flags)					\
+		$(KBUILD_LDFLAGS:%=-Wl,%) $(LDFLAGS_u-boot:%=-Wl,%) -o $@	\
+		-T u-boot.lds $(u-boot-init)					\
+		-Wl,--whole-archive						\
+			$(u-boot-main)						\
+			$(u-boot-keep-syms-lto)					\
+			$(PLATFORM_LIBS)					\
+		-Wl,--no-whole-archive						\
+		-Wl,-Map,u-boot.map;						\
+		$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
+else
 quiet_cmd_u-boot__ ?= LD      $@
-      cmd_u-boot__ ?= $(LD) $(KBUILD_LDFLAGS) $(LDFLAGS_u-boot) -o $@ \
-      -T u-boot.lds $(u-boot-init)                             \
-      --start-group $(u-boot-main) --end-group                 \
-      $(PLATFORM_LIBS) -Map u-boot.map;                        \
-      $(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
+      cmd_u-boot__ ?= $(LD) $(KBUILD_LDFLAGS) $(LDFLAGS_u-boot) -o $@		\
+		-T u-boot.lds $(u-boot-init)					\
+		--whole-archive							\
+			$(u-boot-main)						\
+		--no-whole-archive						\
+		$(PLATFORM_LIBS) -Map u-boot.map;				\
+		$(if $(ARCH_POSTLINK), $(MAKE) -f $(ARCH_POSTLINK) $@, true)
+endif
 
 quiet_cmd_smap = GEN     common/system_map.o
 cmd_smap = \
@@ -1718,7 +1791,7 @@ cmd_smap = \
 	$(CC) $(c_flags) -DSYSTEM_MAP="\"$${smap}\"" \
 		-c $(srctree)/common/system_map.c -o common/system_map.o
 
-u-boot:	$(u-boot-init) $(u-boot-main) u-boot.lds FORCE
+u-boot:	$(u-boot-init) $(u-boot-main) $(u-boot-keep-syms-lto) u-boot.lds FORCE
 	+$(call if_changed,u-boot__)
 ifeq ($(CONFIG_KALLSYMS),y)
 	$(call cmd,smap)
@@ -2001,14 +2074,16 @@ CLEAN_FILES += include/bmp_logo.h include/bmp_logo_data.h tools/version.h \
 	       boot* u-boot* MLO* SPL System.map fit-dtb.blob* \
 	       u-boot-ivt.img.log u-boot-dtb.imx.log SPL.log u-boot.imx.log \
 	       lpc32xx-* bl31.c bl31.elf bl31_*.bin image.map tispl.bin* \
-	       idbloader.img flash.bin flash.log defconfig
+	       idbloader.img flash.bin flash.log defconfig keep-syms-lto.c
 
 # Directories & files removed with 'make mrproper'
 MRPROPER_DIRS  += include/config include/generated spl tpl \
 		  .tmp_objdiff doc/output
+
+# Remove include/asm symlink created by U-Boot before v2014.01
 MRPROPER_FILES += .config .config.old include/autoconf.mk* include/config.h \
 		  ctags etags tags TAGS cscope* GPATH GTAGS GRTAGS GSYMS \
-		  drivers/video/fonts/*.S
+		  drivers/video/fonts/*.S include/asm
 
 # clean - Delete most, but leave enough to build external modules
 #

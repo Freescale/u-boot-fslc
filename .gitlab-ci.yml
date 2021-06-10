@@ -189,7 +189,6 @@ sandbox_spl test.py:
   <<: *buildman_and_testpy_dfn
 
 sandbox_noinst_test.py:
-  tags: [ 'all' ]
   variables:
     TEST_PY_BD: "sandbox_noinst"
     TEST_PY_TEST_SPEC: "test_ofplatdata or test_handoff or test_spl"
@@ -222,30 +221,6 @@ qemu_arm test.py:
 qemu_arm64 test.py:
   variables:
     TEST_PY_BD: "qemu_arm64"
-    TEST_PY_TEST_SPEC: "not sleep"
-  <<: *buildman_and_testpy_dfn
-
-qemu_mips test.py:
-  variables:
-    TEST_PY_BD: "qemu_mips"
-    TEST_PY_TEST_SPEC: "not sleep"
-  <<: *buildman_and_testpy_dfn
-
-qemu_mipsel test.py:
-  variables:
-    TEST_PY_BD: "qemu_mipsel"
-    TEST_PY_TEST_SPEC: "not sleep"
-  <<: *buildman_and_testpy_dfn
-
-qemu_mips64 test.py:
-  variables:
-    TEST_PY_BD: "qemu_mips64"
-    TEST_PY_TEST_SPEC: "not sleep"
-  <<: *buildman_and_testpy_dfn
-
-qemu_mips64el test.py:
-  variables:
-    TEST_PY_BD: "qemu_mips64el"
     TEST_PY_TEST_SPEC: "not sleep"
   <<: *buildman_and_testpy_dfn
 

@@ -19,14 +19,18 @@
 #define CONFIG_SYS_SPL_ARGS_ADDR	0x88000000
 
 /* Falcon Mode - MMC support: args@1MB kernel@2MB */
-#define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR  0x800   /* 1MB */
-#define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS (CONFIG_CMD_SPL_WRITE_SIZE / 512)
+#define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR       0x800   /* 1MB */
+#define CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTORS      (CONFIG_CMD_SPL_WRITE_SIZE / 512)
+#define CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR     0x1000  /* 2MB */
 #endif
 
 #define CONFIG_MXC_UART_BASE		UART5_IPS_BASE_ADDR
 
+#define CONFIG_SYS_LOAD_ADDR		0x80800000
+#define CONFIG_SYS_HZ				1000
+
 /* MMC Config */
-#define CONFIG_SYS_FSL_ESDHC_ADDR	0
+#define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC3_BASE_ADDR
 
 #define CONFIG_DFU_ENV_SETTINGS \
 	"dfu_alt_info=" \
@@ -92,9 +96,11 @@
 		"name=rootfs,size=0,uuid=${uuid_gpt_rootfs}\0" \
 	"fastboot_partition_alias_system=rootfs\0" \
 	"setup_emmc=mmc dev 0; gpt write mmc 0 $partitions; reset;\0" \
+	"mmcautodetect=yes\0" \
 	PICO_BOOT_ENV
 
 #define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 3) \
 	func(MMC, mmc, 0) \
 	func(USB, usb, 0) \
 	func(PXE, pxe, na) \
@@ -102,6 +108,9 @@
 
 #include <config_distro_bootcmd.h>
 #include <linux/stringify.h>
+
+#define CONFIG_SYS_MEMTEST_START	0x80000000
+#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + 0x20000000)
 
 /* Physical Memory Map */
 #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
@@ -115,20 +124,40 @@
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
+/* I2C configs */
+#define CONFIG_SYS_I2C_SPEED		100000
+
 /* PMIC */
 #define CONFIG_POWER_PFUZE3000
 #define CONFIG_POWER_PFUZE3000_I2C_ADDR	0x08
+
+#ifdef CONFIG_DM_VIDEO
+#define CONFIG_VIDEO_MXS
+#define CONFIG_VIDEO_LOGO
+#define CONFIG_SPLASH_SCREEN_ALIGN
+#define CONFIG_SPLASH_SOURCE
+#define CONFIG_BMP_16BPP
+#define CONFIG_BMP_24BPP
+#define CONFIG_BMP_32BPP
+#define CONFIG_VIDEO_BMP_RLE8
+#define CONFIG_VIDEO_BMP_LOGO
+#endif
 
 /* FLASH and environment organization */
 
 /* Environment starts at 768k = 768 * 1024 = 786432 */
 
-#define CONFIG_SYS_FSL_USDHC_NUM		2
+#define CONFIG_SYS_FSL_USDHC_NUM	2
+
+#define CONFIG_SYS_MMC_ENV_DEV		0
+#define CONFIG_SYS_MMC_ENV_PART		0
 
 /* USB Configs */
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
 #define CONFIG_MXC_USB_PORTSC			(PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS			0
 #define CONFIG_USB_MAX_CONTROLLER_COUNT	2
+
+#define CONFIG_IMX_THERMAL
 
 #endif

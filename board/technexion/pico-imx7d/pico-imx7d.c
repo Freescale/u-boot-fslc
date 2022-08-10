@@ -4,13 +4,11 @@
  */
 
 #include <init.h>
-#include <net.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/crm_regs.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/mx7-pins.h>
 #include <asm/arch/sys_proto.h>
-#include <asm/global_data.h>
 #include <asm/gpio.h>
 #include <asm/mach-imx/iomux-v3.h>
 #include <asm/mach-imx/mxc_i2c.h>
@@ -21,6 +19,9 @@
 #include <power/pmic.h>
 #include <power/pfuze3000_pmic.h>
 #include "../../freescale/common/pfuze.h"
+#include <mmc.h>
+#include <splash.h>
+#include <asm/mach-imx/boot_mode.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -159,6 +160,100 @@ int board_phy_config(struct phy_device *phydev)
 }
 #endif
 
+#ifdef CONFIG_SPLASH_SCREEN
+static struct splash_location imx_splash_locations[] = {
+	{
+		.name = "sf",
+		.storage = SPLASH_STORAGE_SF,
+		.flags = SPLASH_STORAGE_RAW,
+		.offset = 0x100000,
+	},
+	{
+		.name = "mmc_fs",
+		.storage = SPLASH_STORAGE_MMC,
+		.flags = SPLASH_STORAGE_FS,
+		.devpart = "0:1",
+	},
+	{
+		.name = "usb_fs",
+		.storage = SPLASH_STORAGE_USB,
+		.flags = SPLASH_STORAGE_FS,
+		.devpart = "0:1",
+	},
+	{
+		.name = "sata_fs",
+		.storage = SPLASH_STORAGE_SATA,
+		.flags = SPLASH_STORAGE_FS,
+		.devpart = "0:1",
+	},
+};
+
+/*This function is defined in common/splash.c.
+  Declare here to remove warning. */
+int splash_video_logo_load(void);
+
+int splash_screen_prepare(void)
+{
+	imx_splash_locations[1].devpart[0] = mmc_get_env_dev() + '0';
+	int ret;
+	ret = splash_source_load(imx_splash_locations, ARRAY_SIZE(imx_splash_locations));
+	if (!ret)
+		return 0;
+	else {
+		printf("\nNo splash.bmp in boot partition!!\n");
+		printf("Using default logo!!\n\n");
+		return splash_video_logo_load();
+	}
+}
+#endif /* CONFIG_SPLASH_SCREEN */
+
+#if CONFIG_IS_ENABLED(FSL_ESDHC_IMX)
+int check_mmc_autodetect(void)
+{
+	char *autodetect_str = env_get("mmcautodetect");
+
+	if ((autodetect_str != NULL) &&
+		(strcmp(autodetect_str, "yes") == 0)) {
+		return 1;
+	}
+
+	return 0;
+}
+
+void board_late_mmc_init(void)
+{
+	int dev_no = 0;
+	char cmd[32];
+	char mmcblk[32];
+	
+	if (!check_mmc_autodetect())
+		return;
+
+	switch (get_boot_device()) {
+		case SD3_BOOT:
+		case MMC3_BOOT:
+			env_set("bootdev", "MMC3");
+			dev_no = 2;
+			break;
+		case SD1_BOOT:
+			env_set("bootdev", "SD1");
+			dev_no = 0;
+			break;
+		default:
+			printf("Wrong boot device!");
+	}
+	
+	env_set_ulong("mmcdev", dev_no);
+	
+	/* Set mmcblk env */
+	sprintf(mmcblk, "/dev/mmcblk%dp2 rootwait rw", dev_no);
+	env_set("mmcroot", mmcblk);
+	
+	sprintf(cmd, "mmc dev %d", dev_no);
+	run_command(cmd, 0);
+}
+#endif
+
 static void setup_iomux_uart(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart5_pads, ARRAY_SIZE(uart5_pads));
@@ -210,6 +305,10 @@ int board_late_init(void)
 
 	set_wdog_reset(wdog);
 
+#if defined(CONFIG_ENV_IS_IN_MMC) || defined(CONFIG_ENV_IS_NOWHERE)
+	board_late_mmc_init();
+#endif /* CONFIG_ENV_IS_IN_MMC or CONFIG_ENV_IS_NOWHERE */
+
 	/*
 	 * Do not assert internal WDOG_RESET_B_DEB(controlled by bit 4),
 	 * since we use PMIC_PWRON to reset the board.
@@ -218,6 +317,29 @@ int board_late_init(void)
 
 	return 0;
 }
+
+#ifdef CONFIG_OF_BOARD_SETUP
+int ft_board_setup(void *blob, struct bd_info *bd)
+{
+	const int *cell;
+	int offs;
+	uint32_t cma_size;
+	unsigned int dram_size;
+
+	dram_size = imx_ddr_size() / 1024 / 1024;
+	offs = fdt_path_offset(blob, "/reserved-memory/linux,cma");
+	cell = fdt_getprop(blob, offs, "size", NULL);
+	cma_size = fdt32_to_cpu(cell[0]);
+	if (dram_size == 512) {
+		/* CMA is aligned by 32MB on i.mx8mq,
+		   so CMA size can only be multiple of 32MB */
+		cma_size = env_get_ulong("cma_size", 10, (6 * 32) * 1024 * 1024);
+		fdt_setprop_u32(blob, offs, "size", (uint64_t)cma_size);
+	}
+
+	return 0;
+}
+#endif
 
 int checkboard(void)
 {
@@ -243,4 +365,10 @@ int board_ehci_hcd_init(int port)
 		return -EINVAL;
 	}
 	return 0;
+}
+
+/* This should be defined for each board */
+__weak int mmc_map_to_kernel_blk(int dev_no)
+{
+    return dev_no;
 }

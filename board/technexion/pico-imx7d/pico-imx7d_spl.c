@@ -5,9 +5,9 @@
  * Author: Richard Hu <richard.hu@technexion.com>
  */
 
-#include <common.h>
-#include <cpu_func.h>
 #include <init.h>
+#include <command.h>
+#include <cpu_func.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/crm_regs.h>
@@ -18,6 +18,7 @@
 #include <asm/gpio.h>
 #include <fsl_esdhc_imx.h>
 #include <spl.h>
+#include <asm/mach-imx/boot_mode.h>
 
 #if defined(CONFIG_SPL_BUILD)
 
@@ -61,6 +62,8 @@ static struct ddrc ddrc_regs_val = {
 	.dramtmg0	= 0x09081109,
 	.addrmap0	= 0x0000001f,
 	.addrmap1	= 0x00080808,
+	.addrmap2	= 0x00000000,
+	.addrmap3	= 0x00000000,
 	.addrmap4	= 0x00000f0f,
 	.addrmap5	= 0x07070707,
 	.addrmap6	= 0x0f0f0707,
@@ -100,17 +103,39 @@ static void gpr_init(void)
 	writel(0x4F400005, &gpr_regs->gpr[1]);
 }
 
+/**********************************************
+* Revision Detection
+*
+* DDR_TYPE_DET_1   DDR_TYPE_DET_2
+*   GPIO_1           GPIO_2
+*     0                1           2GB DDR3
+*     0                0           1GB DDR3
+*     1                0           512MB DDR3
+***********************************************/
 static bool is_1g(void)
 {
 	gpio_direction_input(IMX_GPIO_NR(1, 12));
 	return !gpio_get_value(IMX_GPIO_NR(1, 12));
 }
 
+static bool is_2g(void)
+{
+	gpio_direction_input(IMX_GPIO_NR(1, 13));
+	return gpio_get_value(IMX_GPIO_NR(1, 13));
+}
+
 static void ddr_init(void)
 {
-	if (is_1g())
-		ddrc_regs_val.addrmap6	= 0x0f070707;
-
+	if (is_1g()) {
+		if (is_2g()) {
+			ddrc_regs_val.addrmap0	= 0x0000001f;
+			ddrc_regs_val.addrmap1	= 0x00181818;
+			ddrc_regs_val.addrmap4	= 0x00000f0f;
+			ddrc_regs_val.addrmap5	= 0x04040404;
+			ddrc_regs_val.addrmap6	= 0x04040404;
+		} else
+			ddrc_regs_val.addrmap6	= 0x0f070707;
+	}
 	mx7_dram_cfg(&ddrc_regs_val, &ddrc_mp_val, &ddr_phy_regs_val,
 		     &calib_param);
 }
@@ -127,14 +152,23 @@ void board_init_f(ulong dummy)
 	board_init_r(NULL, 0);
 }
 
-void reset_cpu(void)
-{
-}
-
 #define USDHC_PAD_CTRL (PAD_CTL_DSE_3P3V_32OHM | PAD_CTL_SRE_SLOW | \
 	PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PUS_PU47KOHM)
 
-static iomux_v3_cfg_t const usdhc3_pads[] = {
+#define USDHC1_CD_GPIO	IMX_GPIO_NR(5, 0)
+/* EMMC/SD */
+static iomux_v3_cfg_t const usdhc1_pads[] = {
+	MX7D_PAD_SD1_CLK__SD1_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_CMD__SD1_CMD | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA0__SD1_DATA0 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA1__SD1_DATA1 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA2__SD1_DATA2 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_DATA3__SD1_DATA3 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+	MX7D_PAD_SD1_CD_B__GPIO5_IO0  | MUX_PAD_CTRL(USDHC_PAD_CTRL),
+};
+
+#define USDHC3_CD_GPIO IMX_GPIO_NR(1, 14)
+static iomux_v3_cfg_t const usdhc3_emmc_pads[] = {
 	MX7D_PAD_SD3_CLK__SD3_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX7D_PAD_SD3_CMD__SD3_CMD | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 	MX7D_PAD_SD3_DATA0__SD3_DATA0 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -148,20 +182,83 @@ static iomux_v3_cfg_t const usdhc3_pads[] = {
 	MX7D_PAD_GPIO1_IO14__GPIO1_IO14 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
 
-static struct fsl_esdhc_cfg usdhc_cfg[1] = {
+static struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC3_BASE_ADDR},
+	{USDHC1_BASE_ADDR},
 };
 
 int board_mmc_getcd(struct mmc *mmc)
 {
-	/* Assume uSDHC3 emmc is always present */
-	return 1;
+	struct fsl_esdhc_cfg *cfg = (struct fsl_esdhc_cfg *)mmc->priv;
+	int ret = 0;
+
+	switch (cfg->esdhc_base) {
+	case USDHC1_BASE_ADDR:
+		ret = !gpio_get_value(USDHC1_CD_GPIO); /* Assume uSDHC1 sd is always present */
+		break;
+	case USDHC3_BASE_ADDR:
+		ret = !gpio_get_value(USDHC3_CD_GPIO); /* Assume uSDHC3 emmc is always present */
+		break;
+	}
+
+	return ret;
 }
 
 int board_mmc_init(struct bd_info *bis)
 {
-	imx_iomux_v3_setup_multiple_pads(usdhc3_pads, ARRAY_SIZE(usdhc3_pads));
-	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
-	return fsl_esdhc_initialize(bis, &usdhc_cfg[0]);
+	int ret;
+	u32 index = 0;
+
+	/*
+	 * Following map is done:
+	 * (USDHC)	(Physical Port)
+	 * usdhc3	SOM MicroSD/MMC
+	 * usdhc1	Carrier board MicroSD
+	 * Always set boot USDHC as mmc0
+	 */
+
+	imx_iomux_v3_setup_multiple_pads(
+				usdhc3_emmc_pads, ARRAY_SIZE(usdhc3_emmc_pads));
+	gpio_direction_input(USDHC3_CD_GPIO);
+
+	imx_iomux_v3_setup_multiple_pads(
+				usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
+	gpio_direction_input(USDHC1_CD_GPIO);
+
+	switch (get_boot_device()) {
+		case SD1_BOOT:
+			usdhc_cfg[0].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[0].max_bus_width = 4;
+			usdhc_cfg[1].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+			break;
+		case MMC3_BOOT:
+			usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].max_bus_width = 8;
+			usdhc_cfg[1].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+			break;
+		case SD3_BOOT:
+		default:
+			usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].max_bus_width = 4;
+			usdhc_cfg[1].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+			break;
+	}
+
+	for (index = 0; index < CONFIG_SYS_FSL_USDHC_NUM; ++index) {
+		ret = fsl_esdhc_initialize(bis, &usdhc_cfg[index]);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
 }
 #endif

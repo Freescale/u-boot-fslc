@@ -56,7 +56,7 @@ static struct splash_location default_splash_locations[] = {
 
 #include <bmp_logo_data.h>
 
-static int splash_video_logo_load(void)
+int splash_video_logo_load(void)
 {
 	char *splashimage;
 	ulong bmp_load_addr;

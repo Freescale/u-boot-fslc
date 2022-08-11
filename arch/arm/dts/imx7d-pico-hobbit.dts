@@ -13,6 +13,11 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_gpio_leds>;
 
+		aliases {
+			mmc0 = &usdhc1;
+			mmc2 = &usdhc3;
+		};
+
 		led {
 			label = "gpio-led";
 			gpios = <&gpio2 13 GPIO_ACTIVE_HIGH>;

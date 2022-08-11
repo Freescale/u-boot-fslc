@@ -152,6 +152,10 @@ void board_init_f(ulong dummy)
 	board_init_r(NULL, 0);
 }
 
+void reset_cpu(void)
+{
+}
+
 #define USDHC_PAD_CTRL (PAD_CTL_DSE_3P3V_32OHM | PAD_CTL_SRE_SLOW | \
 	PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PUS_PU47KOHM)
 

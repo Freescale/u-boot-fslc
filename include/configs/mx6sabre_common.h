@@ -45,7 +45,7 @@
 		"setenv video_interfaces lvds hdmi; " \
 	"fi;"
 
-#define CONFIG_EXTRA_ENV_SETTINGS \
+#define CFG_EXTRA_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"fdtfile=undefined\0" \
